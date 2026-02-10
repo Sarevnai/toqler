@@ -13,6 +13,9 @@ const loginSchema = z.object({
   email: z.string().trim().email("Email inválido"),
   password: z.string().min(6, "Mínimo 6 caracteres")
 });
+const resetSchema = z.object({
+  email: z.string().trim().email("Email inválido")
+});
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") === "signup" ? "signup" : "login";
@@ -21,6 +24,29 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = resetSchema.safeParse({ email: resetEmail });
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Email de recuperação enviado! Verifique sua caixa de entrada.");
+    setShowReset(false);
+    setResetEmail("");
+  };
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = loginSchema.safeParse({
@@ -75,6 +101,33 @@ export default function Auth() {
     }
     toast.success("Verifique seu email para confirmar sua conta!");
   };
+  if (showReset) {
+    return <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto text-2xl font-bold">Greattings</div>
+          <CardTitle>Recuperar senha</CardTitle>
+          <CardDescription>Insira seu email para receber o link de recuperação</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input id="reset-email" type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="seu@email.com" required />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enviar link de recuperação
+            </Button>
+            <Button type="button" variant="ghost" className="w-full" onClick={() => setShowReset(false)}>
+              Voltar ao login
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>;
+  }
+
   return <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
@@ -102,6 +155,9 @@ export default function Auth() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Entrar
+                </Button>
+                <Button type="button" variant="link" className="w-full text-sm" onClick={() => setShowReset(true)}>
+                  Esqueci minha senha
                 </Button>
               </form>
             </TabsContent>
