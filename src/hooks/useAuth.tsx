@@ -56,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("company_memberships")
         .select("company_id, role")
         .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
         .maybeSingle();
       setCompanyId(data?.company_id ?? null);
       setCompanyRole((data?.role as "admin" | "member") ?? null);
