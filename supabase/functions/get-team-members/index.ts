@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -14,28 +14,31 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify the calling user is authenticated
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Create client with user's token to verify identity
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user) {
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const userId = claimsData.claims.sub;
 
     const { company_id } = await req.json();
     if (!company_id) {
@@ -45,13 +48,14 @@ serve(async (req) => {
       });
     }
 
-    // Verify the user is a member of this company
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Verify user is a member of this company
     const { data: membership } = await adminClient
       .from("company_memberships")
       .select("id")
       .eq("company_id", company_id)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (!membership) {
@@ -73,21 +77,15 @@ serve(async (req) => {
       });
     }
 
-    // Get user emails from auth.users
+    // Get user emails ONLY for members of this company (not all users)
     const userIds = memberships.map((m: any) => m.user_id);
-    const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({
-      perPage: 1000,
-    });
-
-    if (listError) {
-      console.error("Error listing users:", listError);
-      return new Response(JSON.stringify({ error: "Failed to fetch user details" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userMap = new Map(users.map((u: any) => [u.id, u.email]));
+    const userEmails = await Promise.all(
+      userIds.map(async (uid: string) => {
+        const { data } = await adminClient.auth.admin.getUserById(uid);
+        return [uid, data?.user?.email || "unknown"] as const;
+      })
+    );
+    const userMap = new Map(userEmails);
 
     const result = memberships.map((m: any) => ({
       id: m.id,

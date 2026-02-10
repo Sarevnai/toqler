@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { company_id, lead } = await req.json();
+    const { lead_id } = await req.json();
 
-    if (!company_id || !lead) {
-      return new Response(JSON.stringify({ error: "company_id and lead required" }), {
+    if (!lead_id) {
+      return new Response(JSON.stringify({ error: "lead_id required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -25,6 +25,32 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Verify the lead exists and was created recently (within last 60 seconds)
+    const { data: lead, error: leadError } = await adminClient
+      .from("leads")
+      .select("id, company_id, name, email, phone, profile_id, created_at")
+      .eq("id", lead_id)
+      .maybeSingle();
+
+    if (leadError || !lead) {
+      return new Response(JSON.stringify({ error: "Lead not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate lead was created within last 60 seconds to prevent replay attacks
+    const createdAt = new Date(lead.created_at).getTime();
+    const now = Date.now();
+    if (now - createdAt > 60000) {
+      return new Response(JSON.stringify({ error: "Lead too old" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const company_id = lead.company_id;
 
     // Get active webhook integrations for this company
     const { data: integrations, error: intError } = await adminClient
@@ -65,7 +91,6 @@ serve(async (req) => {
           },
         };
 
-        // Add custom headers if configured
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };

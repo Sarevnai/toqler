@@ -2,3 +2,9 @@ project_id = "gvgdpbrrsttscupcoesf"
 
 [functions.webhook-dispatcher]
 verify_jwt = false
+
+[functions.send-follow-up]
+verify_jwt = false
+
+[functions.get-team-members]
+verify_jwt = false

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, MessageCircle, Instagram, Linkedin, Globe, Download, Loader2, Wifi } from "lucide-react";
+import { User, MessageCircle, Instagram, Linkedin, Globe, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -120,7 +120,7 @@ export default function PublicProfile() {
       phone: leadForm.phone?.trim() || null,
       consent: true,
     };
-    const { error } = await supabase.from("leads").insert(leadData);
+    const { data: insertedLead, error } = await supabase.from("leads").insert(leadData).select("id").single();
     await supabase.from("events").insert({
       event_type: "lead_submit",
       profile_id: profile.id,
@@ -128,13 +128,15 @@ export default function PublicProfile() {
       device: getDevice(),
     });
 
-    // Dispatch webhooks and follow-up email (fire and forget)
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const payload = JSON.stringify({ company_id: profile.company_id, lead: leadData });
-    const headers = { "Content-Type": "application/json", apikey };
-    fetch(`${supabaseUrl}/functions/v1/webhook-dispatcher`, { method: "POST", headers, body: payload }).catch(() => {});
-    fetch(`${supabaseUrl}/functions/v1/send-follow-up`, { method: "POST", headers, body: payload }).catch(() => {});
+    // Dispatch webhooks and follow-up email using lead_id (fire and forget)
+    if (insertedLead?.id) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const payload = JSON.stringify({ lead_id: insertedLead.id });
+      const headers = { "Content-Type": "application/json", apikey };
+      fetch(`${supabaseUrl}/functions/v1/webhook-dispatcher`, { method: "POST", headers, body: payload }).catch(() => {});
+      fetch(`${supabaseUrl}/functions/v1/send-follow-up`, { method: "POST", headers, body: payload }).catch(() => {});
+    }
 
     setSubmitting(false);
     if (error) { toast.error("Erro ao enviar"); return; }
@@ -265,7 +267,7 @@ export default function PublicProfile() {
         {!hideBranding && (
           <div className="text-center py-4">
             <a href="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-              <Wifi className="h-3 w-3" />Powered by Greattings
+              Powered by Greattings
             </a>
           </div>
         )}
