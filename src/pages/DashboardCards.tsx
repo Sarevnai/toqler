@@ -19,7 +19,7 @@ export default function DashboardCards() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ label: "", tag_uid: "" });
+  const [form, setForm] = useState({ label: "" });
   const [saving, setSaving] = useState(false);
 
   const fetchCards = async () => {
@@ -36,16 +36,22 @@ export default function DashboardCards() {
 
   useEffect(() => { fetchCards(); }, [companyId]);
 
+  const generateTagUid = () => {
+    const bytes = Array.from({ length: 7 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, "0").toUpperCase());
+    return bytes.join(":");
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyId) return;
     setSaving(true);
-    const { error } = await supabase.from("nfc_cards").insert({ ...form, company_id: companyId });
+    const tag_uid = generateTagUid();
+    const { error } = await supabase.from("nfc_cards").insert({ label: form.label, tag_uid, company_id: companyId });
     setSaving(false);
     if (error) { toast.error("Erro ao criar cartão"); return; }
     toast.success("Cartão criado!");
     setDialogOpen(false);
-    setForm({ label: "", tag_uid: "" });
+    setForm({ label: "" });
     fetchCards();
   };
 
@@ -79,7 +85,7 @@ export default function DashboardCards() {
             <DialogHeader><DialogTitle>Criar cartão NFC</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="space-y-2"><Label>Nome do cartão *</Label><Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} required placeholder="Ex: Cartão do João" /></div>
-              <div className="space-y-2"><Label>UID da tag *</Label><Input value={form.tag_uid} onChange={(e) => setForm({ ...form, tag_uid: e.target.value })} required placeholder="Ex: 04:A2:B1:C3:D4:E5" /></div>
+              <p className="text-xs text-muted-foreground">O UID da tag será gerado automaticamente.</p>
               <Button type="submit" className="w-full" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar cartão</Button>
             </form>
           </DialogContent>
