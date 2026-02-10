@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Search, Loader2 } from "lucide-react";
+import { Download, Search, Loader2, ChevronLeft, ChevronRight, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+const PAGE_SIZE = 20;
 
 export default function DashboardLeads() {
   const { companyId } = useAuth();
@@ -18,39 +20,115 @@ export default function DashboardLeads() {
   const [profileFilter, setProfileFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => {
+  const fetchLeads = useCallback(async () => {
     if (!companyId) return;
-    const fetchData = async () => {
-      setLoading(true);
-      const [leadsRes, profilesRes] = await Promise.all([
-        supabase.from("leads").select("*, profiles(name)").eq("company_id", companyId).order("created_at", { ascending: false }),
-        supabase.from("profiles").select("id, name").eq("company_id", companyId),
-      ]);
-      setLeads(leadsRes.data ?? []);
-      setProfiles(profilesRes.data ?? []);
-      setLoading(false);
-    };
-    fetchData();
-  }, [companyId]);
+    setLoading(true);
 
-  const filtered = leads.filter((l) => {
-    const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) || l.email.toLowerCase().includes(search.toLowerCase());
-    const matchProfile = profileFilter === "all" || l.profile_id === profileFilter;
-    let matchPeriod = true;
+    let query = supabase
+      .from("leads")
+      .select("*, profiles(name)", { count: "exact" })
+      .eq("company_id", companyId)
+      .order("created_at", { ascending: false });
+
+    if (profileFilter !== "all") {
+      query = query.eq("profile_id", profileFilter);
+    }
+
     if (periodFilter !== "all") {
       const days = parseInt(periodFilter);
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - days);
-      matchPeriod = new Date(l.created_at) >= cutoff;
+      query = query.gte("created_at", cutoff.toISOString());
     }
-    return matchSearch && matchProfile && matchPeriod;
-  });
 
-  const exportCSV = () => {
+    if (search.trim()) {
+      query = query.or(`name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`);
+    }
+
+    query = query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    const { data, count } = await query;
+    setLeads(data ?? []);
+    setTotalCount(count ?? 0);
+    setLoading(false);
+  }, [companyId, profileFilter, periodFilter, search, page]);
+
+  useEffect(() => {
+    if (!companyId) return;
+    supabase.from("profiles").select("id, name").eq("company_id", companyId).then(({ data }) => {
+      setProfiles(data ?? []);
+    });
+  }, [companyId]);
+
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(0); }, [search, profileFilter, periodFilter]);
+
+  // Realtime subscription for new leads
+  useEffect(() => {
+    if (!companyId) return;
+
+    const channel = supabase
+      .channel("leads-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "leads",
+          filter: `company_id=eq.${companyId}`,
+        },
+        (payload) => {
+          toast.info("Novo lead recebido!", {
+            description: `${(payload.new as any).name} - ${(payload.new as any).email}`,
+            icon: <Bell className="h-4 w-4" />,
+          });
+          // Refresh the list if on first page
+          if (page === 0) {
+            fetchLeads();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [companyId, page, fetchLeads]);
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const exportCSV = async () => {
+    // Fetch all filtered leads for export (not just current page)
+    let query = supabase
+      .from("leads")
+      .select("*, profiles(name)")
+      .eq("company_id", companyId!)
+      .order("created_at", { ascending: false });
+
+    if (profileFilter !== "all") query = query.eq("profile_id", profileFilter);
+    if (periodFilter !== "all") {
+      const days = parseInt(periodFilter);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      query = query.gte("created_at", cutoff.toISOString());
+    }
+    if (search.trim()) {
+      query = query.or(`name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`);
+    }
+
+    const { data: allLeads } = await query;
+    const filtered = allLeads ?? [];
+
     const bom = "\uFEFF";
     const header = "Nome,Email,Telefone,Perfil,Data\n";
-    const rows = filtered.map((l) => `"${l.name}","${l.email}","${l.phone || ""}","${l.profiles?.name || ""}","${format(new Date(l.created_at), "dd/MM/yyyy")}"`).join("\n");
+    const rows = filtered.map((l: any) => `"${l.name}","${l.email}","${l.phone || ""}","${l.profiles?.name || ""}","${format(new Date(l.created_at), "dd/MM/yyyy")}"`).join("\n");
     const blob = new Blob([bom + header + rows], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -66,7 +144,7 @@ export default function DashboardLeads() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Leads</h1>
-          <p className="text-muted-foreground">{filtered.length} leads encontrados</p>
+          <p className="text-muted-foreground">{totalCount} leads encontrados</p>
         </div>
         <Button onClick={exportCSV} variant="outline" className="gap-2"><Download className="h-4 w-4" />Exportar CSV</Button>
       </div>
@@ -109,7 +187,7 @@ export default function DashboardLeads() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((l) => (
+              {leads.map((l) => (
                 <TableRow key={l.id}>
                   <TableCell className="font-medium">{l.name}</TableCell>
                   <TableCell>{l.email}</TableCell>
@@ -118,11 +196,28 @@ export default function DashboardLeads() {
                   <TableCell>{format(new Date(l.created_at), "dd/MM/yyyy", { locale: ptBR })}</TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {leads.length === 0 && (
                 <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum lead encontrado</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                Página {page + 1} de {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                  <ChevronLeft className="h-4 w-4 mr-1" />Anterior
+                </Button>
+                <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                  Próxima<ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

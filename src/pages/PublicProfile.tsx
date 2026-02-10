@@ -128,13 +128,13 @@ export default function PublicProfile() {
       device: getDevice(),
     });
 
-    // Dispatch webhooks (fire and forget)
+    // Dispatch webhooks and follow-up email (fire and forget)
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    fetch(`${supabaseUrl}/functions/v1/webhook-dispatcher`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-      body: JSON.stringify({ company_id: profile.company_id, lead: leadData }),
-    }).catch(() => {});
+    const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const payload = JSON.stringify({ company_id: profile.company_id, lead: leadData });
+    const headers = { "Content-Type": "application/json", apikey };
+    fetch(`${supabaseUrl}/functions/v1/webhook-dispatcher`, { method: "POST", headers, body: payload }).catch(() => {});
+    fetch(`${supabaseUrl}/functions/v1/send-follow-up`, { method: "POST", headers, body: payload }).catch(() => {});
 
     setSubmitting(false);
     if (error) { toast.error("Erro ao enviar"); return; }
