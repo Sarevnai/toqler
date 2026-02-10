@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { CreditCard, Plus, Search, Trash2, Loader2 } from "lucide-react";
+import { CreditCard, Plus, Search, Trash2, Loader2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -16,25 +17,26 @@ import { ptBR } from "date-fns/locale";
 export default function DashboardCards() {
   const { companyId } = useAuth();
   const [cards, setCards] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ label: "" });
+  const [form, setForm] = useState({ label: "", profile_id: "" });
   const [saving, setSaving] = useState(false);
 
-  const fetchCards = async () => {
+  const fetchData = async () => {
     if (!companyId) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("nfc_cards")
-      .select("*, profiles(name)")
-      .eq("company_id", companyId)
-      .order("created_at", { ascending: false });
-    setCards(data ?? []);
+    const [cardsRes, profilesRes] = await Promise.all([
+      supabase.from("nfc_cards").select("*, profiles(name)").eq("company_id", companyId).order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, name").eq("company_id", companyId).order("name"),
+    ]);
+    setCards(cardsRes.data ?? []);
+    setProfiles(profilesRes.data ?? []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchCards(); }, [companyId]);
+  useEffect(() => { fetchData(); }, [companyId]);
 
   const generateTagUid = () => {
     const bytes = Array.from({ length: 7 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, "0").toUpperCase());
@@ -46,25 +48,33 @@ export default function DashboardCards() {
     if (!companyId) return;
     setSaving(true);
     const tag_uid = generateTagUid();
-    const { error } = await supabase.from("nfc_cards").insert({ label: form.label, tag_uid, company_id: companyId });
+    const insertData: any = { label: form.label, tag_uid, company_id: companyId };
+    if (form.profile_id) insertData.profile_id = form.profile_id;
+    const { error } = await supabase.from("nfc_cards").insert(insertData);
     setSaving(false);
     if (error) { toast.error("Erro ao criar cartão"); return; }
     toast.success("Cartão criado!");
     setDialogOpen(false);
-    setForm({ label: "" });
-    fetchCards();
+    setForm({ label: "", profile_id: "" });
+    fetchData();
+  };
+
+  const updateProfile = async (cardId: string, profileId: string | null) => {
+    await supabase.from("nfc_cards").update({ profile_id: profileId }).eq("id", cardId);
+    fetchData();
+    toast.success("Perfil vinculado!");
   };
 
   const toggleStatus = async (id: string, current: string) => {
     const newStatus = current === "active" ? "inactive" : "active";
     await supabase.from("nfc_cards").update({ status: newStatus }).eq("id", id);
-    fetchCards();
+    fetchData();
   };
 
   const deleteCard = async (id: string) => {
     if (!confirm("Excluir este cartão?")) return;
     await supabase.from("nfc_cards").delete().eq("id", id);
-    fetchCards();
+    fetchData();
     toast.success("Cartão excluído");
   };
 
@@ -85,6 +95,16 @@ export default function DashboardCards() {
             <DialogHeader><DialogTitle>Criar cartão NFC</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="space-y-2"><Label>Nome do cartão *</Label><Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} required placeholder="Ex: Cartão do João" /></div>
+              <div className="space-y-2">
+                <Label>Vincular a um perfil</Label>
+                <Select value={form.profile_id} onValueChange={(v) => setForm({ ...form, profile_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um perfil (opcional)" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <p className="text-xs text-muted-foreground">O UID da tag será gerado automaticamente.</p>
               <Button type="submit" className="w-full" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar cartão</Button>
             </form>
@@ -104,16 +124,28 @@ export default function DashboardCards() {
           {filtered.map((c, i) => (
             <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Card>
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-card-foreground">{c.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">UID: {c.tag_uid} {c.profiles?.name ? `• ${c.profiles.name}` : ""}</p>
-                    <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(c.updated_at), { addSuffix: true, locale: ptBR })}</p>
+                <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-card-foreground">{c.label}</p>
+                      <p className="text-xs text-muted-foreground truncate">UID: {c.tag_uid}</p>
+                      <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(c.updated_at), { addSuffix: true, locale: ptBR })}</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
+                    <Select value={c.profile_id || "none"} onValueChange={(v) => updateProfile(c.id, v === "none" ? null : v)}>
+                      <SelectTrigger className="w-[160px] h-8 text-xs">
+                        <Link2 className="h-3 w-3 mr-1 shrink-0" />
+                        <SelectValue placeholder="Vincular perfil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum</SelectItem>
+                        {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <Switch checked={c.status === "active"} onCheckedChange={() => toggleStatus(c.id, c.status)} />
                     <Button variant="ghost" size="icon" onClick={() => deleteCard(c.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                   </div>
