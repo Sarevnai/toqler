@@ -372,6 +372,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_company_with_membership: {
+        Args: { _name: string }
+        Returns: string
+      }
       is_company_admin: { Args: { _company_id: string }; Returns: boolean }
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
     }

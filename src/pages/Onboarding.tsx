@@ -19,31 +19,18 @@ export default function Onboarding() {
     e.preventDefault();
     if (!user || !name.trim()) return;
     setLoading(true);
-    
-    const { data: company, error: companyErr } = await supabase
-      .from("companies")
-      .insert({ name: name.trim() })
-      .select()
-      .single();
 
-    if (companyErr || !company) {
+    const { error } = await supabase.rpc("create_company_with_membership", {
+      _name: name.trim(),
+    });
+
+    if (error) {
       toast.error("Erro ao criar empresa");
       setLoading(false);
       return;
     }
 
-    const { error: memberErr } = await supabase
-      .from("company_memberships")
-      .insert({ company_id: company.id, user_id: user.id, role: "admin" });
-
-    if (memberErr) {
-      toast.error("Erro ao vincular membership");
-      setLoading(false);
-      return;
-    }
-
     toast.success("Empresa criada com sucesso!");
-    // Force page reload to update auth context
     window.location.href = "/dashboard";
   };
 
