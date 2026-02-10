@@ -8,11 +8,34 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { CreditCard, Plus, Search, Trash2, Loader2, Link2 } from "lucide-react";
+import { CreditCard, Plus, Search, Trash2, Loader2, Link2, Copy, Lock, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+const SLUG_REGEX = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
+const BASE_URL = "https://greattings.lovable.app/c/";
+
+function generateSlug(label: string): string {
+  return label
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
+
+function validateSlug(slug: string): string | null {
+  if (!slug) return "Slug é obrigatório";
+  if (slug.length < 3) return "Mínimo 3 caracteres";
+  if (slug.length > 60) return "Máximo 60 caracteres";
+  if (!SLUG_REGEX.test(slug)) return "Use apenas letras minúsculas, números, hífens e barras";
+  return null;
+}
 
 export default function DashboardCards() {
   const { companyId } = useAuth();
@@ -21,7 +44,8 @@ export default function DashboardCards() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ label: "", profile_id: "" });
+  const [form, setForm] = useState({ label: "", profile_id: "", slug: "" });
+  const [slugError, setSlugError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const fetchData = async () => {
@@ -43,19 +67,37 @@ export default function DashboardCards() {
     return bytes.join(":");
   };
 
+  const handleLabelChange = (label: string) => {
+    const slug = generateSlug(label);
+    setForm((f) => ({ ...f, label, slug }));
+    setSlugError(validateSlug(slug));
+  };
+
+  const handleSlugChange = (slug: string) => {
+    setForm((f) => ({ ...f, slug }));
+    setSlugError(validateSlug(slug));
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const err = validateSlug(form.slug);
+    if (err) { setSlugError(err); return; }
     if (!companyId) return;
     setSaving(true);
     const tag_uid = generateTagUid();
-    const insertData: any = { label: form.label, tag_uid, company_id: companyId };
+    const insertData: any = { label: form.label, tag_uid, company_id: companyId, slug: form.slug };
     if (form.profile_id) insertData.profile_id = form.profile_id;
     const { error } = await supabase.from("nfc_cards").insert(insertData);
     setSaving(false);
-    if (error) { toast.error("Erro ao criar cartão"); return; }
+    if (error) {
+      if (error.code === "23505") { toast.error("Este slug já está em uso"); return; }
+      toast.error("Erro ao criar cartão");
+      return;
+    }
     toast.success("Cartão criado!");
     setDialogOpen(false);
-    setForm({ label: "", profile_id: "" });
+    setForm({ label: "", profile_id: "", slug: "" });
+    setSlugError(null);
     fetchData();
   };
 
@@ -71,6 +113,13 @@ export default function DashboardCards() {
     fetchData();
   };
 
+  const lockSlug = async (id: string) => {
+    if (!confirm("Após travar, o slug não poderá mais ser alterado. Continuar?")) return;
+    await supabase.from("nfc_cards").update({ slug_locked: true } as any).eq("id", id);
+    fetchData();
+    toast.success("Slug travado!");
+  };
+
   const deleteCard = async (id: string) => {
     if (!confirm("Excluir este cartão?")) return;
     await supabase.from("nfc_cards").delete().eq("id", id);
@@ -78,7 +127,16 @@ export default function DashboardCards() {
     toast.success("Cartão excluído");
   };
 
-  const filtered = cards.filter((c) => c.label.toLowerCase().includes(search.toLowerCase()) || c.tag_uid.toLowerCase().includes(search.toLowerCase()));
+  const copyLink = (slug: string) => {
+    navigator.clipboard.writeText(`${BASE_URL}${slug}`);
+    toast.success("Link copiado!");
+  };
+
+  const filtered = cards.filter((c) =>
+    c.label.toLowerCase().includes(search.toLowerCase()) ||
+    c.tag_uid.toLowerCase().includes(search.toLowerCase()) ||
+    (c.slug && c.slug.toLowerCase().includes(search.toLowerCase()))
+  );
 
   return (
     <div className="space-y-6">
@@ -94,7 +152,21 @@ export default function DashboardCards() {
           <DialogContent>
             <DialogHeader><DialogTitle>Criar cartão NFC</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-2"><Label>Nome do cartão *</Label><Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} required placeholder="Ex: Cartão do João" /></div>
+              <div className="space-y-2">
+                <Label>Nome do cartão *</Label>
+                <Input value={form.label} onChange={(e) => handleLabelChange(e.target.value)} required placeholder="Ex: Cartão do João" />
+              </div>
+              <div className="space-y-2">
+                <Label>Slug (URL personalizada) *</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground shrink-0">/c/</span>
+                  <Input value={form.slug} onChange={(e) => handleSlugChange(e.target.value)} placeholder="empresa/joao-silva" />
+                </div>
+                {slugError && <p className="text-xs text-destructive">{slugError}</p>}
+                {form.slug && !slugError && (
+                  <p className="text-xs text-muted-foreground truncate">Link: {BASE_URL}{form.slug}</p>
+                )}
+              </div>
               <div className="space-y-2">
                 <Label>Vincular a um perfil</Label>
                 <Select value={form.profile_id} onValueChange={(v) => setForm({ ...form, profile_id: v === "none" ? "" : v })}>
@@ -105,8 +177,9 @@ export default function DashboardCards() {
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-xs text-muted-foreground">O UID da tag será gerado automaticamente.</p>
-              <Button type="submit" className="w-full" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar cartão</Button>
+              <Button type="submit" className="w-full" disabled={saving || !!slugError}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar cartão
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -124,31 +197,51 @@ export default function DashboardCards() {
           {filtered.map((c, i) => (
             <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <Card>
-                <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                      <CreditCard className="h-5 w-5 text-primary" />
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                        <CreditCard className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-card-foreground">{c.label}</p>
+                        <p className="text-xs text-muted-foreground truncate">UID: {c.tag_uid}</p>
+                        <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(c.updated_at), { addSuffix: true, locale: ptBR })}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-card-foreground">{c.label}</p>
-                      <p className="text-xs text-muted-foreground truncate">UID: {c.tag_uid}</p>
-                      <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(c.updated_at), { addSuffix: true, locale: ptBR })}</p>
+                    <div className="flex items-center gap-3">
+                      <Select value={c.profile_id || "none"} onValueChange={(v) => updateProfile(c.id, v === "none" ? null : v)}>
+                        <SelectTrigger className="w-[160px] h-8 text-xs">
+                          <Link2 className="h-3 w-3 mr-1 shrink-0" />
+                          <SelectValue placeholder="Vincular perfil" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhum</SelectItem>
+                          {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Switch checked={c.status === "active"} onCheckedChange={() => toggleStatus(c.id, c.status)} />
+                      <Button variant="ghost" size="icon" onClick={() => deleteCard(c.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Select value={c.profile_id || "none"} onValueChange={(v) => updateProfile(c.id, v === "none" ? null : v)}>
-                      <SelectTrigger className="w-[160px] h-8 text-xs">
-                        <Link2 className="h-3 w-3 mr-1 shrink-0" />
-                        <SelectValue placeholder="Vincular perfil" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhum</SelectItem>
-                        {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Switch checked={c.status === "active"} onCheckedChange={() => toggleStatus(c.id, c.status)} />
-                    <Button variant="ghost" size="icon" onClick={() => deleteCard(c.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                  </div>
+
+                  {c.slug && (
+                    <div className="flex items-center gap-2 pl-14">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 min-w-0 flex-1">
+                        {c.slug_locked && <Lock className="h-3 w-3 shrink-0 text-primary" />}
+                        <ExternalLink className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{BASE_URL}{c.slug}</span>
+                      </div>
+                      <Button variant="outline" size="sm" className="h-7 gap-1 text-xs shrink-0" onClick={() => copyLink(c.slug)}>
+                        <Copy className="h-3 w-3" />Copiar
+                      </Button>
+                      {!c.slug_locked && (
+                        <Button variant="outline" size="sm" className="h-7 gap-1 text-xs shrink-0" onClick={() => lockSlug(c.id)}>
+                          <Lock className="h-3 w-3" />Travar
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
