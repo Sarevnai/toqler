@@ -17,6 +17,7 @@ import DashboardIntegrations from "./pages/DashboardIntegrations";
 import DashboardSettings from "./pages/DashboardSettings";
 import DashboardAppearance from "./pages/DashboardAppearance";
 import PublicProfile from "./pages/PublicProfile";
+import CardRedirect from "./pages/CardRedirect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/p/:profileId" element={<PublicProfile />} />
+            <Route path="/c/*" element={<CardRedirect />} />
             <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<DashboardOverview />} />
               <Route path="profiles" element={<DashboardProfiles />} />

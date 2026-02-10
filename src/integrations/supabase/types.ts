@@ -284,6 +284,8 @@ export type Database = {
           id: string
           label: string
           profile_id: string | null
+          slug: string | null
+          slug_locked: boolean
           status: string
           tag_uid: string
           updated_at: string
@@ -294,6 +296,8 @@ export type Database = {
           id?: string
           label: string
           profile_id?: string | null
+          slug?: string | null
+          slug_locked?: boolean
           status?: string
           tag_uid: string
           updated_at?: string
@@ -304,6 +308,8 @@ export type Database = {
           id?: string
           label?: string
           profile_id?: string | null
+          slug?: string | null
+          slug_locked?: boolean
           status?: string
           tag_uid?: string
           updated_at?: string
