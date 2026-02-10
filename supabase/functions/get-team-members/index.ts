@@ -1,0 +1,110 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Verify the calling user is authenticated
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create client with user's token to verify identity
+    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { company_id } = await req.json();
+    if (!company_id) {
+      return new Response(JSON.stringify({ error: "company_id required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify the user is a member of this company
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const { data: membership } = await adminClient
+      .from("company_memberships")
+      .select("id")
+      .eq("company_id", company_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!membership) {
+      return new Response(JSON.stringify({ error: "Not a member" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get all memberships for this company
+    const { data: memberships } = await adminClient
+      .from("company_memberships")
+      .select("id, user_id, role, created_at")
+      .eq("company_id", company_id);
+
+    if (!memberships || memberships.length === 0) {
+      return new Response(JSON.stringify([]), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get user emails from auth.users
+    const userIds = memberships.map((m: any) => m.user_id);
+    const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({
+      perPage: 1000,
+    });
+
+    if (listError) {
+      console.error("Error listing users:", listError);
+      return new Response(JSON.stringify({ error: "Failed to fetch user details" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userMap = new Map(users.map((u: any) => [u.id, u.email]));
+
+    const result = memberships.map((m: any) => ({
+      id: m.id,
+      user_id: m.user_id,
+      role: m.role,
+      created_at: m.created_at,
+      email: userMap.get(m.user_id) || "unknown",
+    }));
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

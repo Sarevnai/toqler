@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Trash2, Upload } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Trash2, Upload, Send, Clock, X } from "lucide-react";
 import { toast } from "sonner";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -16,8 +17,12 @@ export default function DashboardSettings() {
   const { user, companyId, companyRole } = useAuth();
   const [company, setCompany] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"admin" | "member">("member");
+  const [inviting, setInviting] = useState(false);
   const [form, setForm] = useState({ name: "", primary_color: "#0ea5e9", hide_branding: false, follow_up_email: false });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -25,29 +30,55 @@ export default function DashboardSettings() {
 
   const isAdmin = companyRole === "admin";
 
-  useEffect(() => {
+  const fetchData = async () => {
     if (!companyId) return;
-    const fetch = async () => {
-      setLoading(true);
-      const [compRes, membersRes] = await Promise.all([
-        supabase.from("companies").select("*").eq("id", companyId).single(),
-        supabase.from("company_memberships").select("*").eq("company_id", companyId),
-      ]);
-      if (compRes.data) {
-        setCompany(compRes.data);
-        setForm({
-          name: compRes.data.name,
-          primary_color: compRes.data.primary_color || "#0ea5e9",
-          hide_branding: compRes.data.hide_branding || false,
-          follow_up_email: compRes.data.follow_up_email || false,
-        });
-        setLogoPreview(compRes.data.logo_url || null);
+    setLoading(true);
+
+    const [compRes, invRes] = await Promise.all([
+      supabase.from("companies").select("*").eq("id", companyId).single(),
+      supabase.from("invitations").select("*").eq("company_id", companyId).eq("status", "pending").order("created_at", { ascending: false }),
+    ]);
+
+    if (compRes.data) {
+      setCompany(compRes.data);
+      setForm({
+        name: compRes.data.name,
+        primary_color: compRes.data.primary_color || "#0ea5e9",
+        hide_branding: compRes.data.hide_branding || false,
+        follow_up_email: compRes.data.follow_up_email || false,
+      });
+      setLogoPreview(compRes.data.logo_url || null);
+    }
+
+    setInvitations(invRes.data ?? []);
+
+    // Fetch members with emails via edge function
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/get-team-members`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ company_id: companyId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMembers(data);
       }
-      setMembers(membersRes.data ?? []);
-      setLoading(false);
-    };
-    fetch();
-  }, [companyId]);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+      // Fallback to basic query
+      const { data } = await supabase.from("company_memberships").select("*").eq("company_id", companyId);
+      setMembers(data ?? []);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, [companyId]);
 
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,6 +108,42 @@ export default function DashboardSettings() {
     toast.success("Configurações salvas!");
   };
 
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId || !user) return;
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email) return;
+
+    setInviting(true);
+    const { error } = await supabase.from("invitations").insert({
+      company_id: companyId,
+      email,
+      role: inviteRole,
+      invited_by: user.id,
+    });
+    setInviting(false);
+
+    if (error) {
+      if (error.code === "23505") {
+        toast.error("Este email já foi convidado");
+      } else {
+        toast.error("Erro ao enviar convite");
+      }
+      return;
+    }
+
+    toast.success(`Convite enviado para ${email}`);
+    setInviteEmail("");
+    setInviteRole("member");
+    fetchData();
+  };
+
+  const cancelInvitation = async (id: string) => {
+    await supabase.from("invitations").update({ status: "cancelled" }).eq("id", id);
+    setInvitations(invitations.filter((inv) => inv.id !== id));
+    toast.success("Convite cancelado");
+  };
+
   const removeMember = async (membershipId: string) => {
     if (!confirm("Remover este membro?")) return;
     await supabase.from("company_memberships").delete().eq("id", membershipId);
@@ -97,7 +164,6 @@ export default function DashboardSettings() {
         <Card>
           <CardHeader><CardTitle>Dados da Empresa</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            {/* Logo upload */}
             <div className="space-y-2">
               <Label>Logo da empresa</Label>
               <div className="flex items-center gap-4">
@@ -142,11 +208,68 @@ export default function DashboardSettings() {
       <Card>
         <CardHeader><CardTitle>Equipe</CardTitle></CardHeader>
         <CardContent className="space-y-4">
+          {/* Invite form */}
+          {isAdmin && (
+            <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="email"
+                placeholder="email@exemplo.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                required
+                className="flex-1"
+              />
+              <Select value={inviteRole} onValueChange={(v: "admin" | "member") => setInviteRole(v)}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">Membro</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button type="submit" disabled={inviting} className="gap-2">
+                {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Convidar
+              </Button>
+            </form>
+          )}
+
+          {/* Pending invitations */}
+          {invitations.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Convites pendentes</p>
+              {invitations.map((inv) => (
+                <div key={inv.id} className="flex items-center justify-between p-3 rounded-lg border border-dashed border-border">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-card-foreground">{inv.email}</p>
+                      <Badge variant="outline" className="text-xs mt-1">{inv.role === "admin" ? "Admin" : "Membro"}</Badge>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <Button variant="ghost" size="icon" onClick={() => cancelInvitation(inv.id)} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Members list */}
           <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Membros ativos</p>
             {members.map((m) => (
               <div key={m.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
                 <div>
-                  <p className="text-sm font-medium text-card-foreground">{m.user_id === user?.id ? "Você" : m.user_id.slice(0, 8)}</p>
+                  <p className="text-sm font-medium text-card-foreground">
+                    {m.user_id === user?.id ? "Você" : (m.email || m.user_id.slice(0, 8))}
+                  </p>
+                  {m.user_id === user?.id && m.email && (
+                    <p className="text-xs text-muted-foreground">{m.email}</p>
+                  )}
                   <Badge variant="secondary" className="text-xs mt-1">{m.role === "admin" ? "Admin" : "Membro"}</Badge>
                 </div>
                 {isAdmin && m.user_id !== user?.id && (

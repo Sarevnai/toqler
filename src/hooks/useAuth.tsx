@@ -52,6 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
     const fetchMembership = async () => {
+      // First, check and accept any pending invitations
+      try {
+        const { data: pendingInvitations } = await supabase.rpc("get_pending_invitations");
+        if (pendingInvitations && pendingInvitations.length > 0) {
+          // Auto-accept the first pending invitation
+          await supabase.rpc("accept_invitation", { _invitation_id: pendingInvitations[0].id });
+        }
+      } catch (err) {
+        console.error("Error checking invitations:", err);
+      }
+
+      // Now fetch membership (may have been just created by invitation acceptance)
       const { data } = await supabase
         .from("company_memberships")
         .select("company_id, role")
