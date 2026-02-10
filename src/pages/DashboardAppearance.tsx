@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, GripVertical, User, MessageCircle, Instagram, Linkedin, Globe, Download, Wifi } from "lucide-react";
+import { Loader2, Save, GripVertical, User, MessageCircle, Instagram, Linkedin, Globe, Download } from "lucide-react";
 import { toast } from "sonner";
 
 const CTA_ICONS: Record<string, any> = { whatsapp: MessageCircle, instagram: Instagram, linkedin: Linkedin, website: Globe };
@@ -305,7 +305,7 @@ export default function DashboardAppearance() {
                 {!company?.hide_branding && (
                   <div className="text-center pt-2">
                     <span className="text-[10px] text-muted-foreground/50 inline-flex items-center gap-1">
-                      <Wifi className="h-2.5 w-2.5" />Powered by Greattings
+                      Powered by Greattings
                     </span>
                   </div>
                 )}

@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -12,9 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const { company_id, lead } = await req.json();
-    if (!company_id || !lead?.email || !lead?.name) {
-      return new Response(JSON.stringify({ error: "company_id and lead (name, email) required" }), {
+    const { lead_id } = await req.json();
+    if (!lead_id) {
+      return new Response(JSON.stringify({ error: "lead_id required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -23,6 +24,30 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Verify lead exists and was created recently
+    const { data: lead, error: leadError } = await adminClient
+      .from("leads")
+      .select("id, company_id, name, email, phone, profile_id, created_at")
+      .eq("id", lead_id)
+      .maybeSingle();
+
+    if (leadError || !lead) {
+      return new Response(JSON.stringify({ error: "Lead not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const createdAt = new Date(lead.created_at).getTime();
+    if (Date.now() - createdAt > 60000) {
+      return new Response(JSON.stringify({ error: "Lead too old" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const company_id = lead.company_id;
 
     // Check if follow_up_email is enabled for this company
     const { data: company } = await adminClient
@@ -37,7 +62,6 @@ serve(async (req) => {
       });
     }
 
-    // Use Lovable AI Gateway to generate a personalized follow-up message
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) {
       console.error("LOVABLE_API_KEY not set");
@@ -79,8 +103,6 @@ serve(async (req) => {
     const aiData = await aiResponse.json();
     const emailBody = aiData.choices?.[0]?.message?.content || "";
 
-    // Log the follow-up email (in production you'd integrate with an email service)
-    // For now, store it as an event with the generated content
     await adminClient.from("events").insert({
       event_type: "follow_up_sent",
       company_id,
