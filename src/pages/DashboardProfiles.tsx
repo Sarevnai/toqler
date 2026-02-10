@@ -1,14 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { User, Plus, Eye, MousePointerClick, Search, Trash2, Loader2 } from "lucide-react";
+import { User, Plus, Eye, Search, Trash2, Loader2, Pencil, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+const emptyForm = { name: "", role_title: "", bio: "", whatsapp: "", instagram: "", linkedin: "", website: "", video_url: "" };
 
 export default function DashboardProfiles() {
   const { companyId } = useAuth();
@@ -16,8 +21,13 @@ export default function DashboardProfiles() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", role_title: "", bio: "", whatsapp: "", instagram: "", linkedin: "", website: "" });
+  const [editingProfile, setEditingProfile] = useState<any>(null);
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProfiles = async () => {
     if (!companyId) return;
@@ -29,17 +39,78 @@ export default function DashboardProfiles() {
 
   useEffect(() => { fetchProfiles(); }, [companyId]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openCreate = () => {
+    setEditingProfile(null);
+    setForm(emptyForm);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (p: any) => {
+    setEditingProfile(p);
+    setForm({
+      name: p.name || "",
+      role_title: p.role_title || "",
+      bio: p.bio || "",
+      whatsapp: p.whatsapp || "",
+      instagram: p.instagram || "",
+      linkedin: p.linkedin || "",
+      website: p.website || "",
+      video_url: p.video_url || "",
+    });
+    setPhotoFile(null);
+    setPhotoPreview(p.photo_url || null);
+    setDialogOpen(true);
+  };
+
+  const uploadPhoto = async (profileId: string): Promise<string | null> => {
+    if (!photoFile) return editingProfile?.photo_url || null;
+    setUploadingPhoto(true);
+    const ext = photoFile.name.split(".").pop();
+    const path = `profiles/${profileId}/photo.${ext}`;
+    const { error } = await supabase.storage.from("assets").upload(path, photoFile, { upsert: true });
+    setUploadingPhoto(false);
+    if (error) { toast.error("Erro ao enviar foto"); return editingProfile?.photo_url || null; }
+    return `${SUPABASE_URL}/storage/v1/object/public/assets/${path}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyId) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").insert({ ...form, company_id: companyId });
-    setSaving(false);
-    if (error) { toast.error("Erro ao criar perfil"); return; }
-    toast.success("Perfil criado!");
+
+    if (editingProfile) {
+      const photo_url = await uploadPhoto(editingProfile.id);
+      const { error } = await supabase.from("profiles").update({ ...form, photo_url }).eq("id", editingProfile.id);
+      setSaving(false);
+      if (error) { toast.error("Erro ao salvar perfil"); return; }
+      toast.success("Perfil atualizado!");
+    } else {
+      const { data, error } = await supabase.from("profiles").insert({ ...form, company_id: companyId }).select("id").single();
+      if (error || !data) { setSaving(false); toast.error("Erro ao criar perfil"); return; }
+      if (photoFile) {
+        const photo_url = await uploadPhoto(data.id);
+        if (photo_url) await supabase.from("profiles").update({ photo_url }).eq("id", data.id);
+      }
+      setSaving(false);
+      toast.success("Perfil criado!");
+    }
+
     setDialogOpen(false);
-    setForm({ name: "", role_title: "", bio: "", whatsapp: "", instagram: "", linkedin: "", website: "" });
+    setForm(emptyForm);
+    setEditingProfile(null);
+    setPhotoFile(null);
+    setPhotoPreview(null);
     fetchProfiles();
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB"); return; }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   const togglePublish = async (id: string, current: boolean) => {
@@ -64,29 +135,48 @@ export default function DashboardProfiles() {
           <h1 className="text-2xl font-bold text-foreground">Perfis</h1>
           <p className="text-muted-foreground">Gerencie os perfis digitais da equipe</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="h-4 w-4" />Novo perfil</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Criar perfil</DialogTitle></DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-2"><Label>Nome *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-              <div className="space-y-2"><Label>Cargo</Label><Input value={form.role_title} onChange={(e) => setForm({ ...form, role_title: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Bio</Label><Input value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Instagram</Label><Input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /></div>
-                <div className="space-y-2"><Label>LinkedIn</Label><Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Website</Label><Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
-              </div>
-              <Button type="submit" className="w-full" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar perfil
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button className="gap-2" onClick={openCreate}><Plus className="h-4 w-4" />Novo perfil</Button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditingProfile(null); setPhotoFile(null); setPhotoPreview(null); } setDialogOpen(open); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingProfile ? "Editar perfil" : "Criar perfil"}</DialogTitle></DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Photo upload */}
+            <div className="flex flex-col items-center gap-3">
+              <div
+                className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <Upload className="h-6 w-6 text-muted-foreground" />
+                )}
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
+              <button type="button" className="text-xs text-primary hover:underline" onClick={() => fileInputRef.current?.click()}>
+                {photoPreview ? "Trocar foto" : "Adicionar foto"}
+              </button>
+            </div>
+
+            <div className="space-y-2"><Label>Nome *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+            <div className="space-y-2"><Label>Cargo</Label><Input value={form.role_title} onChange={(e) => setForm({ ...form, role_title: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Bio</Label><Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={3} /></div>
+            <div className="space-y-2"><Label>URL do vídeo</Label><Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="https://youtube.com/..." /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Instagram</Label><Input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /></div>
+              <div className="space-y-2"><Label>LinkedIn</Label><Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Website</Label><Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+            </div>
+            <Button type="submit" className="w-full" disabled={saving || uploadingPhoto}>
+              {(saving || uploadingPhoto) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingProfile ? "Salvar alterações" : "Criar perfil"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -114,9 +204,12 @@ export default function DashboardProfiles() {
                     </button>
                   </div>
                   <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => openEdit(p)}>
+                      <Pencil className="h-3 w-3" />Editar
+                    </Button>
                     {p.published && (
-                      <a href={`/p/${p.id}`} target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full gap-1"><Eye className="h-3 w-3" />Ver</Button>
+                      <a href={`/p/${p.id}`} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="gap-1"><Eye className="h-3 w-3" />Ver</Button>
                       </a>
                     )}
                     <Button variant="ghost" size="sm" onClick={() => deleteProfile(p.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -125,6 +218,7 @@ export default function DashboardProfiles() {
               </Card>
             </motion.div>
           ))}
+          {filtered.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">Nenhum perfil encontrado</p>}
         </div>
       )}
     </div>
