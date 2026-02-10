@@ -17,7 +17,7 @@ const leadSchema = z.object({
 });
 
 const CTA_ICONS: Record<string, typeof MessageCircle> = { whatsapp: MessageCircle, instagram: Instagram, linkedin: Linkedin, website: Globe };
-const CTA_COLORS: Record<string, string> = { whatsapp: "bg-green-500", instagram: "bg-pink-500", linkedin: "bg-blue-600", website: "bg-primary" };
+const CTA_COLORS: Record<string, string> = { whatsapp: "bg-green-500", instagram: "bg-pink-500", linkedin: "bg-blue-600" };
 const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website" };
 
 function getDevice(): string {
@@ -135,6 +135,7 @@ export default function PublicProfile() {
   if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!profile) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Perfil não encontrado</p></div>;
 
+  // Layout settings
   const showSaveContact = layout?.show_save_contact !== false;
   const showLeadForm = layout?.show_lead_form !== false;
   const showCompanyHeader = layout?.show_company_header !== false;
@@ -142,8 +143,23 @@ export default function PublicProfile() {
   const ctaOrder = (layout?.cta_order as string[] | null) ?? ["whatsapp", "instagram", "linkedin", "website"];
   const availableCTAs = ctaOrder.filter((t: string) => profile[t]);
 
+  // Style settings
+  const primaryColor = company?.primary_color || "#0ea5e9";
+  const fontStyle = layout?.font_style || "default";
+  const buttonStyle = layout?.button_style || "rounded";
+  const backgroundStyle = layout?.background_style || "solid";
+
+  const fontClass = fontStyle === "serif" ? "font-serif" : fontStyle === "mono" ? "font-mono" : "font-sans";
+  const btnRadius = buttonStyle === "pill" ? "rounded-full" : buttonStyle === "square" ? "rounded-none" : "rounded-xl";
+
+  const bgStyle: React.CSSProperties = backgroundStyle === "gradient"
+    ? { background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)` }
+    : backgroundStyle === "mesh"
+      ? { background: `radial-gradient(circle at 20% 50%, ${primaryColor}10, transparent 50%), radial-gradient(circle at 80% 50%, ${primaryColor}08, transparent 50%)` }
+      : {};
+
   return (
-    <div className="min-h-screen bg-background flex items-start justify-center py-8 px-4">
+    <div className={`min-h-screen bg-background flex items-start justify-center py-8 px-4 ${fontClass}`} style={bgStyle}>
       <div className="w-full max-w-md space-y-6">
         {/* Company header */}
         {showCompanyHeader && company && (
@@ -155,7 +171,7 @@ export default function PublicProfile() {
 
         {/* Profile photo */}
         <div className="relative">
-          <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-muted">
+          <div className={`aspect-[4/5] ${btnRadius} overflow-hidden bg-muted`}>
             {profile.photo_url ? (
               <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover" />
             ) : (
@@ -173,9 +189,13 @@ export default function PublicProfile() {
 
         {/* Save contact */}
         {showSaveContact && (
-          <Button onClick={generateVCard} className="w-full rounded-full" size="lg">
-            <Download className="mr-2 h-4 w-4" />Salvar Contato
-          </Button>
+          <button
+            onClick={generateVCard}
+            className={`w-full py-3 px-4 font-medium text-center transition-opacity hover:opacity-90 ${btnRadius}`}
+            style={{ backgroundColor: primaryColor, color: "#fff" }}
+          >
+            <Download className="inline h-4 w-4 mr-2" />Salvar Contato
+          </button>
         )}
 
         {/* CTAs */}
@@ -184,8 +204,8 @@ export default function PublicProfile() {
             {availableCTAs.map((type: string) => {
               const Icon = CTA_ICONS[type] || Globe;
               return (
-                <button key={type} onClick={() => handleCTA(type)} className="flex items-center gap-4 w-full p-4 rounded-xl border border-border hover:bg-muted/50 transition-colors">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full text-primary-foreground ${CTA_COLORS[type] || "bg-primary"}`}>
+                <button key={type} onClick={() => handleCTA(type)} className={`flex items-center gap-4 w-full p-4 ${btnRadius} border border-border hover:bg-muted/50 transition-colors`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full text-primary-foreground ${CTA_COLORS[type] || ""}`} style={!CTA_COLORS[type] ? { backgroundColor: primaryColor } : {}}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="text-left">
@@ -200,28 +220,33 @@ export default function PublicProfile() {
 
         {/* Video */}
         {profile.video_url && (
-          <div className="rounded-xl overflow-hidden">
+          <div className={`${btnRadius} overflow-hidden`}>
             <iframe src={profile.video_url} className="w-full aspect-video" allowFullScreen title="Video" />
           </div>
         )}
 
         {/* Lead form */}
         {showLeadForm && (
-          <div className="border border-border rounded-2xl p-6 space-y-4">
+          <div className={`border border-border ${btnRadius} p-6 space-y-4`}>
             <h3 className="font-semibold text-foreground">Deixe seu contato</h3>
             <form onSubmit={handleLeadSubmit} className="space-y-3">
-              <Input placeholder="Nome *" value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} required />
-              <Input type="email" placeholder="Email *" value={leadForm.email} onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })} required />
-              <Input placeholder="Telefone" value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} />
+              <Input placeholder="Nome *" value={leadForm.name} onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })} required className={btnRadius} />
+              <Input type="email" placeholder="Email *" value={leadForm.email} onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })} required className={btnRadius} />
+              <Input placeholder="Telefone" value={leadForm.phone} onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })} className={btnRadius} />
               <div className="flex items-start gap-2">
                 <Checkbox id="consent" checked={leadForm.consent} onCheckedChange={(v) => setLeadForm({ ...leadForm, consent: v === true })} />
                 <Label htmlFor="consent" className="text-xs text-muted-foreground leading-relaxed">
                   Concordo com o compartilhamento dos meus dados de acordo com a LGPD.
                 </Label>
               </div>
-              <Button type="submit" className="w-full" disabled={submitting || !leadForm.consent}>
-                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Enviar
-              </Button>
+              <button
+                type="submit"
+                disabled={submitting || !leadForm.consent}
+                className={`w-full py-2.5 px-4 font-medium text-center transition-opacity hover:opacity-90 disabled:opacity-50 ${btnRadius}`}
+                style={{ backgroundColor: primaryColor, color: "#fff" }}
+              >
+                {submitting && <Loader2 className="inline mr-2 h-4 w-4 animate-spin" />}Enviar
+              </button>
             </form>
           </div>
         )}

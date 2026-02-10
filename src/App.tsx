@@ -15,6 +15,7 @@ import DashboardLeads from "./pages/DashboardLeads";
 import DashboardAnalytics from "./pages/DashboardAnalytics";
 import DashboardIntegrations from "./pages/DashboardIntegrations";
 import DashboardSettings from "./pages/DashboardSettings";
+import DashboardAppearance from "./pages/DashboardAppearance";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="cards" element={<DashboardCards />} />
               <Route path="leads" element={<DashboardLeads />} />
               <Route path="analytics" element={<DashboardAnalytics />} />
+              <Route path="appearance" element={<DashboardAppearance />} />
               <Route path="integrations" element={<DashboardIntegrations />} />
               <Route path="settings" element={<DashboardSettings />} />
             </Route>
