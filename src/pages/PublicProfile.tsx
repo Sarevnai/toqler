@@ -9,6 +9,40 @@ import { User, MessageCircle, Instagram, Linkedin, Globe, Download, Loader2 } fr
 import { toast } from "sonner";
 import { z } from "zod";
 
+/**
+ * Extracts a safe embed URL from YouTube or Vimeo links.
+ * Returns null for unsupported URLs.
+ */
+function getSafeVideoEmbedUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    // YouTube: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID
+    if (parsed.hostname.includes("youtube.com") || parsed.hostname === "youtu.be") {
+      let videoId: string | null = null;
+      if (parsed.hostname === "youtu.be") {
+        videoId = parsed.pathname.slice(1);
+      } else if (parsed.pathname.startsWith("/embed/")) {
+        videoId = parsed.pathname.split("/embed/")[1]?.split(/[?/]/)[0];
+      } else {
+        videoId = parsed.searchParams.get("v");
+      }
+      if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+    // Vimeo: vimeo.com/ID, player.vimeo.com/video/ID
+    if (parsed.hostname.includes("vimeo.com")) {
+      const match = parsed.pathname.match(/\/(?:video\/)?(\d+)/);
+      if (match) {
+        return `https://player.vimeo.com/video/${match[1]}`;
+      }
+    }
+  } catch {
+    // Invalid URL
+  }
+  return null;
+}
+
 const leadSchema = z.object({
   name: z.string().trim().min(1, "Nome obrigatório").max(100),
   email: z.string().trim().email("Email inválido").max(255),
@@ -230,12 +264,23 @@ export default function PublicProfile() {
           </div>
         )}
 
-        {/* Video */}
-        {profile.video_url && (
-          <div className={`${btnRadius} overflow-hidden`}>
-            <iframe src={profile.video_url} className="w-full aspect-video" allowFullScreen title="Video" />
-          </div>
-        )}
+        {/* Video (only YouTube/Vimeo) */}
+        {profile.video_url && (() => {
+          const embedUrl = getSafeVideoEmbedUrl(profile.video_url);
+          if (!embedUrl) return null;
+          return (
+            <div className={`${btnRadius} overflow-hidden`}>
+              <iframe
+                src={embedUrl}
+                className="w-full aspect-video"
+                allowFullScreen
+                title="Video"
+                sandbox="allow-scripts allow-same-origin allow-presentation"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          );
+        })()}
 
         {/* Lead form */}
         {showLeadForm && (
