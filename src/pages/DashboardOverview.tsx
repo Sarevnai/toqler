@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, User, Eye, MousePointerClick, Plus, TrendingUp, TrendingDown } from "lucide-react";
+import { CreditCard, User, Eye, MousePointerClick, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -18,34 +18,15 @@ export default function DashboardOverview() {
     if (!companyId) return;
 
     const fetchData = async () => {
-      const [cardsRes, profilesRes, eventsRes] = await Promise.all([
-        supabase.from("nfc_cards").select("id", { count: "exact" }).eq("company_id", companyId).eq("status", "active"),
+      const [kpiRes, chartRes, profilesRes] = await Promise.all([
+        supabase.rpc("get_dashboard_kpis", { _company_id: companyId }),
+        supabase.rpc("get_daily_chart", { _company_id: companyId }),
         supabase.from("profiles").select("*").eq("company_id", companyId),
-        supabase.from("events").select("*").eq("company_id", companyId),
       ]);
 
-      const allProfiles = profilesRes.data ?? [];
-      const publishedCount = allProfiles.filter((p) => p.published).length;
-      const events = eventsRes.data ?? [];
-      const views = events.filter((e) => e.event_type === "profile_view").length;
-      const clicks = events.filter((e) => e.event_type === "cta_click").length;
-
-      setKpis({ cards: cardsRes.count ?? 0, profiles: publishedCount, views, clicks });
-      setProfiles(allProfiles);
-
-      // Build 7-day chart data
-      const days: { date: string; views: number; clicks: number }[] = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().slice(0, 10);
-        days.push({
-          date: d.toLocaleDateString("pt-BR", { weekday: "short" }),
-          views: events.filter((e) => e.event_type === "profile_view" && e.created_at?.startsWith(dateStr)).length,
-          clicks: events.filter((e) => e.event_type === "cta_click" && e.created_at?.startsWith(dateStr)).length,
-        });
-      }
-      setChartData(days);
+      if (kpiRes.data) setKpis(kpiRes.data as any);
+      if (chartRes.data) setChartData(chartRes.data as any);
+      setProfiles(profilesRes.data ?? []);
     };
 
     fetchData();

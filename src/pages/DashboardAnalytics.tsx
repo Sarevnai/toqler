@@ -15,37 +15,17 @@ export default function DashboardAnalytics() {
 
   useEffect(() => {
     if (!companyId) return;
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const { data: events } = await supabase.from("events").select("*").eq("company_id", companyId);
-      const allEvents = events ?? [];
-
-      // Monthly data (last 6 months)
-      const months: any[] = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const m = d.toISOString().slice(0, 7);
-        months.push({
-          month: d.toLocaleDateString("pt-BR", { month: "short" }),
-          views: allEvents.filter((e) => e.event_type === "profile_view" && e.created_at?.startsWith(m)).length,
-          leads: allEvents.filter((e) => e.event_type === "lead_submit" && e.created_at?.startsWith(m)).length,
-        });
-      }
-      setMonthlyData(months);
-
-      // CTA distribution
-      const ctaClicks = allEvents.filter((e) => e.event_type === "cta_click");
-      const ctaMap: Record<string, number> = {};
-      ctaClicks.forEach((e) => {
-        const type = e.cta_type || "outro";
-        ctaMap[type] = (ctaMap[type] || 0) + 1;
-      });
-      const labelMap: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website", save_contact: "Salvar Contato" };
-      setCtaData(Object.entries(ctaMap).map(([k, v]) => ({ name: labelMap[k] || k, value: v })));
+      const [monthlyRes, ctaRes] = await Promise.all([
+        supabase.rpc("get_monthly_chart", { _company_id: companyId }),
+        supabase.rpc("get_cta_distribution", { _company_id: companyId }),
+      ]);
+      setMonthlyData((monthlyRes.data as any) ?? []);
+      setCtaData((ctaRes.data as any) ?? []);
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, [companyId]);
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
