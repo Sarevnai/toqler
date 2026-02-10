@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmDialog";
+import type { NfcCardWithProfile, Profile } from "@/types/entities";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
 const BASE_URL = "https://greattings.lovable.app/c/";
@@ -39,14 +41,15 @@ function validateSlug(slug: string): string | null {
 
 export default function DashboardCards() {
   const { companyId } = useAuth();
-  const [cards, setCards] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [cards, setCards] = useState<NfcCardWithProfile[]>([]);
+  const [profiles, setProfiles] = useState<Pick<Profile, "id" | "name">[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ label: "", profile_id: "", slug: "" });
   const [slugError, setSlugError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const fetchData = async () => {
     if (!companyId) return;
@@ -55,7 +58,7 @@ export default function DashboardCards() {
       supabase.from("nfc_cards").select("*, profiles(name)").eq("company_id", companyId).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, name").eq("company_id", companyId).order("name"),
     ]);
-    setCards(cardsRes.data ?? []);
+    setCards((cardsRes.data as NfcCardWithProfile[]) ?? []);
     setProfiles(profilesRes.data ?? []);
     setLoading(false);
   };
@@ -85,8 +88,13 @@ export default function DashboardCards() {
     if (!companyId) return;
     setSaving(true);
     const tag_uid = generateTagUid();
-    const insertData: any = { label: form.label, tag_uid, company_id: companyId, slug: form.slug };
-    if (form.profile_id) insertData.profile_id = form.profile_id;
+    const insertData = {
+      label: form.label,
+      tag_uid,
+      company_id: companyId,
+      slug: form.slug,
+      ...(form.profile_id ? { profile_id: form.profile_id } : {}),
+    };
     const { error } = await supabase.from("nfc_cards").insert(insertData);
     setSaving(false);
     if (error) {
@@ -114,14 +122,25 @@ export default function DashboardCards() {
   };
 
   const lockSlug = async (id: string) => {
-    if (!confirm("Após travar, o slug não poderá mais ser alterado. Continuar?")) return;
-    await supabase.from("nfc_cards").update({ slug_locked: true } as any).eq("id", id);
+    const confirmed = await confirm({
+      title: "Travar slug",
+      description: "Após travar, o slug não poderá mais ser alterado. Deseja continuar?",
+      confirmLabel: "Travar",
+    });
+    if (!confirmed) return;
+    await supabase.from("nfc_cards").update({ slug_locked: true }).eq("id", id);
     fetchData();
     toast.success("Slug travado!");
   };
 
   const deleteCard = async (id: string) => {
-    if (!confirm("Excluir este cartão?")) return;
+    const confirmed = await confirm({
+      title: "Excluir cartão",
+      description: "Tem certeza que deseja excluir este cartão? Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     await supabase.from("nfc_cards").delete().eq("id", id);
     fetchData();
     toast.success("Cartão excluído");
@@ -140,6 +159,8 @@ export default function DashboardCards() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog {...dialogProps} />
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Cartões NFC</h1>
@@ -226,13 +247,13 @@ export default function DashboardCards() {
                   </div>
 
                   {c.slug && (
-                    <div className="flex items-center gap-2 pl-14">
+                    <div className="flex items-center gap-2 sm:pl-14">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 rounded-md px-2.5 py-1.5 min-w-0 flex-1">
                         {c.slug_locked && <Lock className="h-3 w-3 shrink-0 text-primary" />}
                         <ExternalLink className="h-3 w-3 shrink-0" />
                         <span className="truncate">{BASE_URL}{c.slug}</span>
                       </div>
-                      <Button variant="outline" size="sm" className="h-7 gap-1 text-xs shrink-0" onClick={() => copyLink(c.slug)}>
+                      <Button variant="outline" size="sm" className="h-7 gap-1 text-xs shrink-0" onClick={() => copyLink(c.slug!)}>
                         <Copy className="h-3 w-3" />Copiar
                       </Button>
                       {!c.slug_locked && (
