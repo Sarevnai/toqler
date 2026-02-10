@@ -465,6 +465,10 @@ export type Database = {
         Args: { _name: string }
         Returns: string
       }
+      get_cta_distribution: { Args: { _company_id: string }; Returns: Json }
+      get_daily_chart: { Args: { _company_id: string }; Returns: Json }
+      get_dashboard_kpis: { Args: { _company_id: string }; Returns: Json }
+      get_monthly_chart: { Args: { _company_id: string }; Returns: Json }
       get_pending_invitations: {
         Args: never
         Returns: {
