@@ -95,26 +95,26 @@ export default function DashboardIntegrations() {
     toast.success("Webhook excluído");
   };
 
-  const testWebhook = async (id: string, config: Record<string, string>) => {
-    setTesting(id);
+  const testWebhook = async (integrationId: string) => {
+    setTesting(integrationId);
     try {
-      const response = await fetch(config.url, {
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/test-webhook`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(config.secret ? { "X-Webhook-Secret": config.secret } : {}),
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({
-          event: "test",
-          timestamp: new Date().toISOString(),
-          company_id: companyId,
-          lead: { name: "Teste", email: "teste@exemplo.com", phone: null },
-        }),
+        body: JSON.stringify({ integration_id: integrationId }),
       });
-      if (response.ok) toast.success("Webhook respondeu com sucesso!");
-      else toast.error(`Webhook retornou status ${response.status}`);
+      const result = await res.json();
+      if (result.success) toast.success("Webhook respondeu com sucesso!");
+      else if (result.error) toast.error(result.error);
+      else toast.error(`Webhook retornou status ${result.status}`);
     } catch {
-      toast.error("Erro ao testar webhook — verifique a URL");
+      toast.error("Erro ao testar webhook");
     }
     setTesting(null);
   };
@@ -194,7 +194,7 @@ export default function DashboardIntegrations() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => testWebhook(w.id, config)}
+                          onClick={() => testWebhook(w.id)}
                           disabled={testing === w.id}
                           className="gap-1"
                         >
