@@ -140,6 +140,44 @@ export type Database = {
           },
         ]
       }
+      integrations: {
+        Row: {
+          active: boolean
+          company_id: string
+          config: Json
+          created_at: string
+          id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          config?: Json
+          created_at?: string
+          id?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           company_id: string

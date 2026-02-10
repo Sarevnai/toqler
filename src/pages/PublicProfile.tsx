@@ -112,20 +112,30 @@ export default function PublicProfile() {
     const result = leadSchema.safeParse(leadForm);
     if (!result.success) { toast.error(result.error.errors[0].message); return; }
     setSubmitting(true);
-    const { error } = await supabase.from("leads").insert({
+    const leadData = {
       company_id: profile.company_id,
       profile_id: profile.id,
       name: leadForm.name.trim(),
       email: leadForm.email.trim(),
       phone: leadForm.phone?.trim() || null,
       consent: true,
-    });
+    };
+    const { error } = await supabase.from("leads").insert(leadData);
     await supabase.from("events").insert({
       event_type: "lead_submit",
       profile_id: profile.id,
       company_id: profile.company_id,
       device: getDevice(),
     });
+
+    // Dispatch webhooks (fire and forget)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    fetch(`${supabaseUrl}/functions/v1/webhook-dispatcher`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      body: JSON.stringify({ company_id: profile.company_id, lead: leadData }),
+    }).catch(() => {});
+
     setSubmitting(false);
     if (error) { toast.error("Erro ao enviar"); return; }
     toast.success("Contato enviado com sucesso!");
