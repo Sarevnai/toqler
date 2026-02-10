@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, User, CreditCard, Users, BarChart3, Puzzle, Settings, LogOut, Wifi } from "lucide-react";
+import { LayoutDashboard, User, CreditCard, Users, BarChart3, Puzzle, Settings, LogOut, Wifi, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const items = [
@@ -20,6 +20,7 @@ const items = [
   { title: "Cartões NFC", url: "/dashboard/cards", icon: CreditCard },
   { title: "Leads", url: "/dashboard/leads", icon: Users },
   { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
+  { title: "Aparência", url: "/dashboard/appearance", icon: Palette },
   { title: "Integrações", url: "/dashboard/integrations", icon: Puzzle },
   { title: "Configurações", url: "/dashboard/settings", icon: Settings },
 ];
