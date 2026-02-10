@@ -1,43 +1,50 @@
 
 
-## Fix: "Erro ao criar empresa" - RLS Policy Issue
+## Fix: Company Creation Fails Due to SELECT Policy on RETURNING Clause
 
-### Problem
-All RLS policies on the `companies` table (and likely other tables) are set as **RESTRICTIVE** instead of **PERMISSIVE**. PostgreSQL RLS requires at least one permissive policy to grant access -- restrictive policies alone always deny.
-
-The INSERT to `companies` returns a 403 error: `"new row violates row-level security policy for table \"companies\""`.
+### Root Cause
+The INSERT into `companies` succeeds (policy: `WITH CHECK (true)`), but the Supabase client uses `.select().single()` which adds a `RETURNING *` clause. This triggers the **SELECT** RLS policy check (`is_company_member(id)`). Since the user hasn't been added to `company_memberships` yet at that point, the SELECT check fails and the entire operation returns a 403 error.
 
 ### Solution
-Drop and recreate the RLS policies on all tables as **PERMISSIVE** (which is the default). This affects:
+Create a database function that wraps company creation and membership assignment in a single operation, bypassing the SELECT policy issue. The function runs as `SECURITY DEFINER` so it can return the company data without hitting the user-level SELECT policy.
 
-1. **companies** - INSERT, SELECT, UPDATE, DELETE policies
-2. **company_memberships** - INSERT, SELECT, UPDATE, DELETE policies
-3. **events** - INSERT, SELECT policies
-4. **leads** - INSERT, SELECT, DELETE policies
-5. **nfc_cards** - INSERT, SELECT, UPDATE, DELETE policies
-6. **profile_layouts** - INSERT, SELECT, UPDATE policies
-7. **profiles** - INSERT, SELECT, UPDATE, DELETE policies
+### Changes Required
+
+**1. New database migration** -- Create a `create_company_with_membership` function:
+- Accepts the company name
+- Inserts into `companies`
+- Inserts into `company_memberships` with the current user as admin
+- Returns the company ID
+- Uses `SECURITY DEFINER` to bypass RLS for the internal operations
+
+**2. Update `src/pages/Onboarding.tsx`** -- Replace the two separate inserts with a single RPC call:
+```typescript
+const { data, error } = await supabase.rpc("create_company_with_membership", {
+  _name: name.trim(),
+});
+```
 
 ### Technical Details
 
-A single SQL migration will:
-- DROP each existing restrictive policy
-- Recreate them as PERMISSIVE (default) with the same logic
-
-For example, the companies INSERT policy will change from:
+The database function:
 ```sql
--- RESTRICTIVE (current - broken)
-CREATE POLICY "Authenticated users can create companies"
-ON companies FOR INSERT TO authenticated
-WITH CHECK (true);
-```
-To:
-```sql
--- PERMISSIVE (fixed)
-CREATE POLICY "Authenticated users can create companies"
-ON companies FOR INSERT TO authenticated
-WITH CHECK (true);
+CREATE OR REPLACE FUNCTION public.create_company_with_membership(_name text)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  _company_id uuid;
+BEGIN
+  INSERT INTO companies (name) VALUES (_name) RETURNING id INTO _company_id;
+  INSERT INTO company_memberships (company_id, user_id, role)
+    VALUES (_company_id, auth.uid(), 'admin');
+  RETURN _company_id;
+END;
+$$;
 ```
 
-The only difference is removing the `AS RESTRICTIVE` clause that was used in the original migration. No code changes are needed -- only the database policies.
+The Onboarding.tsx update removes the two separate queries and uses a single `supabase.rpc()` call. If it succeeds, it redirects to `/dashboard`.
 
+No other files need to change.
