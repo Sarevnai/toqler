@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, User, CreditCard, Users, BarChart3, Puzzle, Settings, LogOut, Wifi, Palette } from "lucide-react";
+import { LayoutDashboard, User, CreditCard, Users, BarChart3, Puzzle, Settings, LogOut, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const items = [
@@ -31,7 +31,6 @@ export function DashboardSidebar() {
   return (
     <Sidebar>
       <div className="flex items-center gap-2 px-4 py-4 text-lg font-bold text-foreground">
-        <Wifi className="h-5 w-5 text-primary" />
         Greattings
       </div>
       <SidebarContent>
