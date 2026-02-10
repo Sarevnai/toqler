@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Webhook, Plus, Trash2, Loader2, ExternalLink, Zap, Send, Globe, Mail, Calendar, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmDialog";
+import type { Integration } from "@/types/entities";
 
 const UPCOMING_INTEGRATIONS = [
   { name: "Salesforce", cat: "CRM", desc: "Sincronize leads automaticamente", icon: BarChart3 },
@@ -27,12 +29,13 @@ const UPCOMING_INTEGRATIONS = [
 
 export default function DashboardIntegrations() {
   const { companyId, companyRole } = useAuth();
-  const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [webhooks, setWebhooks] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ url: "", secret: "", name: "" });
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const isAdmin = companyRole === "admin";
 
@@ -80,13 +83,19 @@ export default function DashboardIntegrations() {
   };
 
   const deleteWebhook = async (id: string) => {
-    if (!confirm("Excluir este webhook?")) return;
+    const confirmed = await confirm({
+      title: "Excluir webhook",
+      description: "Tem certeza que deseja excluir este webhook? Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     await supabase.from("integrations").delete().eq("id", id);
     fetchWebhooks();
     toast.success("Webhook excluído");
   };
 
-  const testWebhook = async (id: string, config: any) => {
+  const testWebhook = async (id: string, config: Record<string, string>) => {
     setTesting(id);
     try {
       const response = await fetch(config.url, {
@@ -112,6 +121,8 @@ export default function DashboardIntegrations() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog {...dialogProps} />
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Integrações</h1>
@@ -149,7 +160,6 @@ export default function DashboardIntegrations() {
         </DialogContent>
       </Dialog>
 
-      {/* Active webhooks */}
       <div>
         <h2 className="text-lg font-semibold text-foreground mb-3">Webhooks configurados</h2>
         {loading ? (
@@ -164,62 +174,64 @@ export default function DashboardIntegrations() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {webhooks.map((w, i) => (
-              <motion.div key={w.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Card>
-                  <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                        <Webhook className="h-5 w-5 text-primary" />
+            {webhooks.map((w, i) => {
+              const config = w.config as Record<string, string>;
+              return (
+                <motion.div key={w.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                  <Card>
+                    <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                          <Webhook className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-card-foreground">{config?.name || "Webhook"}</p>
+                          <p className="text-xs text-muted-foreground truncate">{config?.url}</p>
+                          {config?.secret && <Badge variant="outline" className="text-xs mt-1">Com secret</Badge>}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-card-foreground">{w.config?.name || "Webhook"}</p>
-                        <p className="text-xs text-muted-foreground truncate">{w.config?.url}</p>
-                        {w.config?.secret && <Badge variant="outline" className="text-xs mt-1">Com secret</Badge>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => testWebhook(w.id, w.config)}
-                        disabled={testing === w.id}
-                        className="gap-1"
-                      >
-                        {testing === w.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
-                        Testar
-                      </Button>
-                      <Switch checked={w.active} onCheckedChange={() => toggleWebhook(w.id, w.active)} />
-                      {isAdmin && (
-                        <Button variant="ghost" size="icon" onClick={() => deleteWebhook(w.id)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => testWebhook(w.id, config)}
+                          disabled={testing === w.id}
+                          className="gap-1"
+                        >
+                          {testing === w.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
+                          Testar
                         </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                        <Switch checked={w.active} onCheckedChange={() => toggleWebhook(w.id, w.active)} />
+                        {isAdmin && (
+                          <Button variant="ghost" size="icon" onClick={() => deleteWebhook(w.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Upcoming integrations */}
       <div>
         <h2 className="text-lg font-semibold text-foreground mb-3">Em breve</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {UPCOMING_INTEGRATIONS.map((i, idx) => (
-            <motion.div key={i.name} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}>
+          {UPCOMING_INTEGRATIONS.map((item, idx) => (
+            <motion.div key={item.name} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}>
               <Card className="h-full opacity-60">
                 <CardContent className="p-5 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <i.icon className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="font-semibold text-card-foreground text-sm">{i.name}</h3>
+                      <item.icon className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="font-semibold text-card-foreground text-sm">{item.name}</h3>
                     </div>
                     <Badge variant="secondary" className="text-xs">Em breve</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">{i.desc}</p>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
                 </CardContent>
               </Card>
             </motion.div>

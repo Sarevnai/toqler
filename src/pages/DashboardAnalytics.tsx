@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Loader2 } from "lucide-react";
+import type { MonthlyChartPoint, CtaDistributionPoint } from "@/types/entities";
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 export default function DashboardAnalytics() {
   const { companyId } = useAuth();
-  const [monthlyData, setMonthlyData] = useState<any[]>([]);
-  const [ctaData, setCtaData] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<MonthlyChartPoint[]>([]);
+  const [ctaData, setCtaData] = useState<CtaDistributionPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,8 +22,8 @@ export default function DashboardAnalytics() {
         supabase.rpc("get_monthly_chart", { _company_id: companyId }),
         supabase.rpc("get_cta_distribution", { _company_id: companyId }),
       ]);
-      setMonthlyData((monthlyRes.data as any) ?? []);
-      setCtaData((ctaRes.data as any) ?? []);
+      setMonthlyData((monthlyRes.data as unknown as MonthlyChartPoint[]) ?? []);
+      setCtaData((ctaRes.data as unknown as CtaDistributionPoint[]) ?? []);
       setLoading(false);
     };
     fetchData();

@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { User, Plus, Eye, Search, Trash2, Loader2, Pencil, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmDialog";
+import type { Profile } from "@/types/entities";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -17,17 +19,18 @@ const emptyForm = { name: "", role_title: "", bio: "", whatsapp: "", instagram: 
 
 export default function DashboardProfiles() {
   const { companyId } = useAuth();
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProfile, setEditingProfile] = useState<any>(null);
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const fetchProfiles = async () => {
     if (!companyId) return;
@@ -47,7 +50,7 @@ export default function DashboardProfiles() {
     setDialogOpen(true);
   };
 
-  const openEdit = (p: any) => {
+  const openEdit = (p: Profile) => {
     setEditingProfile(p);
     setForm({
       name: p.name || "",
@@ -120,7 +123,13 @@ export default function DashboardProfiles() {
   };
 
   const deleteProfile = async (id: string) => {
-    if (!confirm("Excluir este perfil?")) return;
+    const confirmed = await confirm({
+      title: "Excluir perfil",
+      description: "Tem certeza que deseja excluir este perfil? Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     await supabase.from("profiles").delete().eq("id", id);
     fetchProfiles();
     toast.success("Perfil excluído");
@@ -130,6 +139,8 @@ export default function DashboardProfiles() {
 
   return (
     <div className="space-y-6">
+      <ConfirmDialog {...dialogProps} />
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Perfis</h1>
@@ -142,7 +153,6 @@ export default function DashboardProfiles() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editingProfile ? "Editar perfil" : "Criar perfil"}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Photo upload */}
             <div className="flex flex-col items-center gap-3">
               <div
                 className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors"

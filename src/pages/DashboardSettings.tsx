@@ -10,14 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Trash2, Upload, Send, Clock, X } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmDialog";
+import type { Company, TeamMember, Invitation } from "@/types/entities";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 export default function DashboardSettings() {
   const { user, companyId, companyRole } = useAuth();
-  const [company, setCompany] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -27,6 +29,7 @@ export default function DashboardSettings() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const { confirm, dialogProps } = useConfirmDialog();
 
   const isAdmin = companyRole === "admin";
 
@@ -52,7 +55,6 @@ export default function DashboardSettings() {
 
     setInvitations(invRes.data ?? []);
 
-    // Fetch members with emails via edge function
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${SUPABASE_URL}/functions/v1/get-team-members`, {
@@ -70,7 +72,6 @@ export default function DashboardSettings() {
       }
     } catch (err) {
       console.error("Error fetching members:", err);
-      // Fallback to basic query
       const { data } = await supabase.from("company_memberships").select("*").eq("company_id", companyId);
       setMembers(data ?? []);
     }
@@ -145,7 +146,13 @@ export default function DashboardSettings() {
   };
 
   const removeMember = async (membershipId: string) => {
-    if (!confirm("Remover este membro?")) return;
+    const confirmed = await confirm({
+      title: "Remover membro",
+      description: "Tem certeza que deseja remover este membro da equipe?",
+      confirmLabel: "Remover",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     await supabase.from("company_memberships").delete().eq("id", membershipId);
     setMembers(members.filter((m) => m.id !== membershipId));
     toast.success("Membro removido");
@@ -155,6 +162,8 @@ export default function DashboardSettings() {
 
   return (
     <div className="space-y-6 max-w-2xl">
+      <ConfirmDialog {...dialogProps} />
+
       <div>
         <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
         <p className="text-muted-foreground">Gerencie sua empresa e equipe</p>
@@ -208,7 +217,6 @@ export default function DashboardSettings() {
       <Card>
         <CardHeader><CardTitle>Equipe</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          {/* Invite form */}
           {isAdmin && (
             <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2">
               <Input
@@ -235,7 +243,6 @@ export default function DashboardSettings() {
             </form>
           )}
 
-          {/* Pending invitations */}
           {invitations.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Convites pendentes</p>
@@ -258,7 +265,6 @@ export default function DashboardSettings() {
             </div>
           )}
 
-          {/* Members list */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Membros ativos</p>
             {members.map((m) => (

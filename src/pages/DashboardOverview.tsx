@@ -7,12 +7,13 @@ import { CreditCard, User, Eye, MousePointerClick, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import type { Profile, DashboardKpis, DailyChartPoint } from "@/types/entities";
 
 export default function DashboardOverview() {
   const { companyId } = useAuth();
-  const [kpis, setKpis] = useState({ cards: 0, profiles: 0, views: 0, clicks: 0 });
-  const [chartData, setChartData] = useState<{ date: string; views: number; clicks: number }[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [kpis, setKpis] = useState<DashboardKpis>({ cards: 0, profiles: 0, views: 0, clicks: 0 });
+  const [chartData, setChartData] = useState<DailyChartPoint[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
 
   useEffect(() => {
     if (!companyId) return;
@@ -24,8 +25,8 @@ export default function DashboardOverview() {
         supabase.from("profiles").select("*").eq("company_id", companyId),
       ]);
 
-      if (kpiRes.data) setKpis(kpiRes.data as any);
-      if (chartRes.data) setChartData(chartRes.data as any);
+      if (kpiRes.data) setKpis(kpiRes.data as unknown as DashboardKpis);
+      if (chartRes.data) setChartData(chartRes.data as unknown as DailyChartPoint[]);
       setProfiles(profilesRes.data ?? []);
     };
 
