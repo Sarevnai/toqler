@@ -78,8 +78,7 @@ export default function Auth() {
   return <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto flex items-center gap-2 text-2xl font-bold">
-            <Wifi className="h-7 w-7 text-primary" />
+          <div className="mx-auto text-2xl font-bold">
             Greattings
           </div>
           <CardDescription>Central de controle NFC para networking B2B</CardDescription>
