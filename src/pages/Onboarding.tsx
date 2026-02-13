@@ -40,7 +40,7 @@ export default function Onboarding() {
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto flex items-center gap-2 text-2xl font-bold">
             <Wifi className="h-7 w-7 text-primary" />
-            Greattings
+            Toqler
           </div>
           <CardTitle>Bem-vindo! 🎉</CardTitle>
           <CardDescription>Crie sua empresa para começar</CardDescription>

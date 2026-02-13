@@ -305,7 +305,7 @@ export default function DashboardAppearance() {
                 {!company?.hide_branding && (
                   <div className="text-center pt-2">
                     <span className="text-[10px] text-muted-foreground/50 inline-flex items-center gap-1">
-                      Powered by Greattings
+                      Powered by Toqler
                     </span>
                   </div>
                 )}

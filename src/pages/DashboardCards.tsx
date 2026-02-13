@@ -17,7 +17,7 @@ import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmD
 import type { NfcCardWithProfile, Profile } from "@/types/entities";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
-const BASE_URL = "https://greattings.lovable.app/c/";
+const BASE_URL = "https://toqler.lovable.app/c/";
 
 function generateSlug(label: string): string {
   return label
