@@ -202,7 +202,7 @@ export default function DashboardSettings() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div><Label>Remover branding</Label><p className="text-xs text-muted-foreground">Ocultar "Powered by Greattings"</p></div>
+              <div><Label>Remover branding</Label><p className="text-xs text-muted-foreground">Ocultar "Powered by Toqler"</p></div>
               <Switch checked={form.hide_branding} onCheckedChange={(v) => setForm({ ...form, hide_branding: v })} />
             </div>
             <div className="flex items-center justify-between">

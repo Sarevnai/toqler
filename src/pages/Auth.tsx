@@ -127,7 +127,7 @@ export default function Auth() {
     return <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto text-2xl font-bold">Greattings</div>
+          <div className="mx-auto text-2xl font-bold">Toqler</div>
           <CardTitle>Recuperar senha</CardTitle>
           <CardDescription>Insira seu email para receber o link de recuperação</CardDescription>
         </CardHeader>
@@ -154,7 +154,7 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto text-2xl font-bold">
-            Greattings
+            Toqler
           </div>
           <CardDescription>Central de controle NFC para networking B2B</CardDescription>
         </CardHeader>

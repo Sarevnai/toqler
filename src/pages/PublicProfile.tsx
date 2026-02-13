@@ -312,7 +312,7 @@ export default function PublicProfile() {
         {!hideBranding && (
           <div className="text-center py-4">
             <a href="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-              Powered by Greattings
+              Powered by Toqler
             </a>
           </div>
         )}

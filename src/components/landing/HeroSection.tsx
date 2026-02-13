@@ -144,7 +144,7 @@ export function HeroSection() {
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/50">
               <img
                 src={heroImage}
-                alt="Greattings - Cartões de visita digitais NFC"
+                alt="Toqler - Cartões de visita digitais NFC"
                 className="w-full h-auto object-cover"
                 loading="eager"
               />
