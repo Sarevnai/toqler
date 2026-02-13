@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreditCard, User, BarChart3, Building2, Webhook, Shield } from "lucide-react";
 import { motion } from "framer-motion";
@@ -10,6 +11,33 @@ const features = [
   { icon: Webhook, title: "Webhooks", desc: "Integre com seu CRM e ferramentas via webhooks e APIs." },
   { icon: Shield, title: "LGPD Compliant", desc: "Coleta de leads com consentimento explícito e dados protegidos." },
 ];
+
+function TiltCard({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [transform, setTransform] = useState("");
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setTransform(`perspective(600px) rotateX(${-y * 6}deg) rotateY(${x * 6}deg)`);
+  };
+
+  const handleMouseLeave = () => setTransform("");
+
+  return (
+    <div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ transform, transition: "transform 0.2s ease-out" }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function FeaturesSection() {
   return (
@@ -26,20 +54,22 @@ export function FeaturesSection() {
           {features.map((f, i) => (
             <motion.div
               key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.1, duration: 0.4 }}
             >
-              <Card className="h-full hover:shadow-md transition-shadow bg-card">
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                    <f.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-card-foreground">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground">{f.desc}</p>
-                </CardContent>
-              </Card>
+              <TiltCard>
+                <Card className="h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                      <f.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-card-foreground">{f.title}</h3>
+                    <p className="text-sm text-muted-foreground">{f.desc}</p>
+                  </CardContent>
+                </Card>
+              </TiltCard>
             </motion.div>
           ))}
         </div>
