@@ -4,6 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+function NavLink({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <a
+      href={href}
+      onClick={onClick}
+      className="story-link text-sm text-muted-foreground hover:text-foreground transition-colors"
+    >
+      <span>{children}</span>
+    </a>
+  );
+}
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
 
@@ -15,8 +27,8 @@ export function Navbar() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Funcionalidades</a>
-          <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Como funciona</a>
+          <NavLink href="#features">Funcionalidades</NavLink>
+          <NavLink href="#how-it-works">Como funciona</NavLink>
           <Link to="/auth">
             <Button variant="ghost" size="sm">Entrar</Button>
           </Link>
