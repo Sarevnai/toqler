@@ -1,122 +1,171 @@
 
 
-# Redesign Completo da Landing Page - Estilo Revolut
+# Aplicar Design System Pluma -- Toda a Aplicacao
 
 ## Resumo
 
-Reestruturacao total da landing page inspirada no site da Revolut: tema escuro, layout hero grande e centralizado com tipografia impactante, imagem do dashboard como mockup do produto, animacoes suaves de entrada e scroll, e secoes limpas com bastante espaco em branco.
+Migrar a identidade visual de azul para o design system Pluma (verde floresta + areia + off-white), atualizando cores, tipografia (adicionando Inter e JetBrains Mono sem remover DM Sans, Libre Caslon e Cousine), sombras, border-radius e componentes em toda a aplicacao.
 
-## O que muda visualmente
+## 1. Fontes -- Adicionar Inter e JetBrains Mono
 
-- **Tema escuro** em toda a landing page (fundo escuro, texto claro)
-- **Hero full-screen** com titulo gigante centralizado, subtitulo, CTA e mockup do dashboard flutuando abaixo
-- **Navbar transparente** com blur, integrando-se ao fundo escuro
-- **Secao de features** com cards escuros e layout limpo
-- **Secao "Como funciona"** com a imagem do dashboard ao lado dos passos
-- **CTA final** com fundo gradiente sutil
-- **Footer** minimalista no tema escuro
-- **Animacoes estilo Revolut**: fade-in por scroll, scale suave, parallax leve no mockup
+**Arquivo:** `index.html`
+- Adicionar imports do Google Fonts para **Inter** (400, 500, 600, 700, 800) e **JetBrains Mono** (400, 500)
+- **Manter** os imports existentes de DM Sans, Libre Caslon Text e Cousine
 
-## Alteracoes por Arquivo
+**Arquivo:** `tailwind.config.ts`
+- Atualizar `fontFamily.sans` para: `['Inter', 'DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif']`
+- Atualizar `fontFamily.mono` para: `['JetBrains Mono', 'Cousine', 'ui-monospace', 'monospace']`
+- Manter `fontFamily.serif` com Libre Caslon Text
 
-### 1. `src/pages/Index.tsx`
-- Envolver tudo em `<div className="dark">` para ativar tema escuro apenas na landing
-- Adicionar `bg-background` para garantir fundo escuro
+## 2. Variaveis CSS -- Nova Paleta Pluma
 
-### 2. `src/assets/dashboard-preview.png` (novo)
-- Copiar a imagem enviada (`Revolut_Business_Web_29.png`) como asset do projeto
+**Arquivo:** `src/index.css`
 
-### 3. `src/components/landing/HeroSection.tsx` (reescrita major)
-- Remover grid de 2 colunas, centralizar todo conteudo
-- Titulo grande (text-5xl a text-7xl) com animacao staggered mantida
-- Subtitulo centralizado abaixo
-- Dois botoes CTA centralizados
-- Mockup do dashboard abaixo dos CTAs com:
-  - Borda arredondada e sombra
-  - Leve perspectiva 3D (CSS perspective + rotateX)
-  - Animacao de entrada scale + fade
-  - Parallax sutil no scroll
-- Stats/counters reposicionados abaixo do mockup
-- Remover a hero image antiga (foto)
-- Manter ParticleCanvas no fundo (ajustar opacidade para dark)
-- Manter ScrollIndicator
+Reescrever todos os tokens de cor no `:root` e `.dark`:
 
-### 4. `src/components/landing/Navbar.tsx`
-- Background transparente com backdrop-blur mais forte
-- Borda inferior mais sutil (`border-white/10`)
-- Garantir que os links e botoes funcionem bem no dark
+### Light (`:root`)
 
-### 5. `src/components/landing/FeaturesSection.tsx`
-- Remover `bg-muted/30` do fundo (usar background padrao dark)
-- Cards com fundo `bg-card` (automaticamente escuro no dark mode)
-- Manter tilt effect e animacoes existentes
-- Adicionar borda sutil `border-border` nos cards
+| Token | Valor HSL | Hex aprox. |
+|-------|-----------|------------|
+| background | 50 20% 98% | #FAFAF8 |
+| foreground | 50 10% 10% | #1A1A17 |
+| primary | 163 37% 18% | #1C3F3A |
+| primary-foreground | 0 0% 100% | #FFFFFF |
+| secondary | 43 30% 88% | #EBE8D8 |
+| secondary-foreground | 50 10% 10% | #1A1A17 |
+| muted | 50 10% 95% | #F4F4F2 |
+| muted-foreground | 50 4% 42% | #6B6B63 |
+| accent | 43 52% 55% | #D4A843 |
+| accent-foreground | 50 10% 10% | #1A1A17 |
+| border | 50 7% 89% | #E5E5E0 |
+| input | 50 7% 89% | #E5E5E0 |
+| ring | 163 37% 18% | #1C3F3A |
+| destructive | 4 74% 59% | #E5544B |
+| card | 0 0% 100% | #FFFFFF |
+| card-foreground | 50 10% 10% | #1A1A17 |
+| popover | 0 0% 100% | #FFFFFF |
+| popover-foreground | 50 10% 10% | #1A1A17 |
 
-### 6. `src/components/landing/HowItWorksSection.tsx`
-- Adicionar a imagem do dashboard como ilustracao
-- Layout: imagem centralizada acima dos passos em mobile, ao lado em desktop
-- Manter a AnimatedLine e as animacoes de entrada dos passos
+### Dark (`.dark`)
 
-### 7. `src/components/landing/CTASection.tsx`
-- Trocar `bg-primary/5` por gradiente sutil ou fundo com opacidade
-- Manter animacoes de blur-to-clear existentes
+| Token | Valor HSL | Hex aprox. |
+|-------|-----------|------------|
+| background | 50 15% 4% | #0D0D0B |
+| foreground | 50 20% 98% | #FAFAF8 |
+| primary | 163 32% 25% | #2A5A52 |
+| primary-foreground | 50 20% 98% | #FAFAF8 |
+| secondary | 50 5% 17% | #2D2D28 |
+| card | 50 8% 10% | #1A1A17 |
+| border | 50 5% 17% | #2D2D28 |
+| muted | 50 5% 12% | #1F1F1C |
+| muted-foreground | 50 4% 55% | #8A8A82 |
 
-### 8. `src/components/landing/Footer.tsx`
-- Ajustar para combinar com dark theme (ja usa variaveis CSS, deve funcionar automaticamente)
+### Sombras
 
-### 9. `src/components/landing/ParticleCanvas.tsx`
-- Sem mudancas necessarias - ja usa variaveis CSS que se adaptam ao dark mode
+Substituir sombras com tom laranja por sombras neutras:
+- `--shadow-sm`: `0 1px 2px rgba(0,0,0,0.04)`
+- `--shadow-md`: `0 2px 8px rgba(0,0,0,0.06)`
+- `--shadow-lg`: `0 4px 16px rgba(0,0,0,0.08)`
 
-## Detalhes Tecnicos
+### Sidebar
 
-### Estrutura do Hero
+Atualizar tokens `--sidebar-*` para usar a paleta forest green (primary, accent, border).
 
-```text
-+------------------------------------------------------+
-|              [Navbar transparente + blur]             |
-+------------------------------------------------------+
-|                                                      |
-|          [Badge: Networking inteligente NFC]          |
-|                                                      |
-|        Seus cartoes de visita, agora                  |
-|          digitais e mensuraveis                       |
-|                                                      |
-|    Transforme interacoes presenciais em dados...      |
-|                                                      |
-|      [Comecar agora]    [Ver como funciona]           |
-|                                                      |
-|    +--------------------------------------------+    |
-|    |                                            |    |
-|    |      Dashboard Preview (perspectiva 3D)    |    |
-|    |                                            |    |
-|    +--------------------------------------------+    |
-|                                                      |
-|   10x memoravel  |  0% desperdicio  |  100% mensur.  |
-|                                                      |
-+------------------------------------------------------+
-```
+### Radius
 
-### Animacoes Revolut-style
+`--radius`: `1rem` (era `1.25rem`)
 
-- **Entrada do titulo**: fade-in + translateY com stagger por palavra (ja implementado, manter)
-- **Entrada do mockup**: scale de 0.9 para 1 + fade, com delay apos titulo
-- **Parallax do mockup**: translateY baseado em scrollYProgress (ja existe, adaptar)
-- **Secoes no scroll**: whileInView com fade-in + translateY (ja implementado)
-- **Navbar**: sem animacao extra, apenas transparencia + blur
+### Fontes CSS vars
 
-### Dependencias
+- `--font-sans`: `Inter, DM Sans, ui-sans-serif, sans-serif, system-ui`
+- `--font-mono`: `JetBrains Mono, Cousine, ui-monospace, monospace`
+- `--font-serif`: manter `Libre Caslon Text, ui-serif, serif`
 
-Nenhuma nova dependencia. Usa Framer Motion, Tailwind e variaveis CSS dark mode ja existentes.
+### Charts
 
-### Arquivos modificados
+Atualizar `--chart-1` a `--chart-5` para tons de verde floresta em vez de azul.
+
+## 3. Componentes UI Base
+
+### `src/components/ui/button.tsx`
+- Remover variantes `hero` e `hero-outline`
+- O estilo `default` ja usa `bg-primary` que agora sera forest green
+- Atualizar border-radius para `rounded-xl` (12px) em todas as variantes
+- Adicionar hover lift sutil (`hover:-translate-y-px hover:shadow-md`)
+
+### `src/components/ui/card.tsx`
+- Manter estrutura, mas o `rounded-lg` herdara o novo `--radius` (16px)
+- Sombra via CSS vars (automatico)
+
+### `src/components/ui/input.tsx`
+- Atualizar para `rounded-xl` (12px)
+- O `border-input` agora usara a cor gray200 via CSS var
+
+## 4. Landing Page
+
+### `src/pages/Index.tsx`
+- Remover wrapper `<div className="dark">` -- a landing sera light por padrao
+- O fundo off-white vem automaticamente das novas CSS vars
+
+### `src/components/landing/Navbar.tsx`
+- `bg-background/60` ja funcionara como branco semi-transparente
+- Trocar `variant="hero"` por `variant="default"` nos botoes
+- Trocar `variant="hero-outline"` por `variant="outline"`
+- Logo "Toqler" agora aparecera em forest green (`text-primary` no modo light)
+
+### `src/components/landing/HeroSection.tsx`
+- Trocar `variant="hero"` por `variant="default"` e `variant="hero-outline"` por `variant="outline"`
+- Badge: `border-primary/20 bg-primary/5` funcionara com o novo verde
+- Cores de texto e fundo herdam das CSS vars automaticamente
+
+### `src/components/landing/FeaturesSection.tsx`
+- Cards ja usam `bg-card` e `border-border/50` -- herdam a nova paleta
+- Sem mudancas de codigo necessarias alem das cores via CSS
+
+### `src/components/landing/HowItWorksSection.tsx`
+- Adicionar fundo forest green (`bg-primary`) com texto branco (`text-primary-foreground`)
+- Cards de passos com glassmorphism: `bg-white/5 border-white/10 backdrop-blur`
+- Numeros dos passos mantem `bg-primary` que agora e verde
+
+### `src/components/landing/CTASection.tsx`
+- Adicionar fundo forest green (`bg-primary`) com texto branco
+- Botao principal: `bg-white text-primary` (invertido para contraste)
+- Trocar `variant="hero"` por estilo customizado branco
+
+### `src/components/landing/Footer.tsx`
+- Fundo near-black: `bg-[#0D0D0B]` com texto branco
+- Copyright e links em `text-white/60`
+
+### `src/components/landing/ParticleCanvas.tsx`
+- Sem mudancas de codigo -- ja le `--primary` via CSS, que agora sera verde floresta
+
+## 5. Paginas Operacionais
+
+### `src/pages/Auth.tsx`
+- Trocar `variant="hero"` por `variant="default"` (se existir)
+- O restante herda das CSS vars automaticamente
+
+### `src/components/dashboard/DashboardSidebar.tsx`
+- Sem mudancas de codigo -- herda tokens `--sidebar-*` via CSS
+
+### Dashboard pages (Overview, Analytics, etc.)
+- Sem mudancas de codigo -- herdam cores via CSS vars
+
+## Resumo de Arquivos
 
 | Arquivo | Tipo de mudanca |
 |---------|----------------|
-| `src/pages/Index.tsx` | Wrapper dark |
-| `src/assets/dashboard-preview.png` | Novo asset |
-| `src/components/landing/HeroSection.tsx` | Reescrita - layout centralizado |
-| `src/components/landing/Navbar.tsx` | Ajustes visuais dark |
-| `src/components/landing/FeaturesSection.tsx` | Ajuste background |
-| `src/components/landing/HowItWorksSection.tsx` | Adicionar imagem |
-| `src/components/landing/CTASection.tsx` | Ajuste background |
+| `index.html` | Adicionar fonts Inter + JetBrains Mono |
+| `src/index.css` | Reescrever tokens de cores, sombras, radius, fontes |
+| `tailwind.config.ts` | Atualizar fontFamily |
+| `src/components/ui/button.tsx` | Remover hero/hero-outline, ajustar radius |
+| `src/components/ui/input.tsx` | Ajustar radius |
+| `src/pages/Index.tsx` | Remover wrapper dark |
+| `src/components/landing/Navbar.tsx` | Trocar variantes de botao |
+| `src/components/landing/HeroSection.tsx` | Trocar variantes de botao |
+| `src/components/landing/HowItWorksSection.tsx` | Fundo forest green + glassmorphism |
+| `src/components/landing/CTASection.tsx` | Fundo forest green + botao branco |
+| `src/components/landing/Footer.tsx` | Fundo near-black |
+
+Nenhuma dependencia nova. Todas as mudancas propagam via CSS vars para o dashboard e demais paginas.
 
