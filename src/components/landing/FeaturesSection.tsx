@@ -41,7 +41,7 @@ function TiltCard({ children }: { children: React.ReactNode }) {
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-20 bg-muted/30">
+    <section id="features" className="py-20">
       <div className="container space-y-12">
         <div className="text-center space-y-4">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground">Tudo que você precisa</h2>
@@ -60,7 +60,7 @@ export function FeaturesSection() {
               transition={{ delay: i * 0.1, duration: 0.4 }}
             >
               <TiltCard>
-                <Card className="h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card">
+                <Card className="h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card border-border/50">
                   <CardContent className="p-6 space-y-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
                       <f.icon className="h-6 w-6 text-primary" />

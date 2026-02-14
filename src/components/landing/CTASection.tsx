@@ -5,8 +5,11 @@ import { motion } from "framer-motion";
 
 export function CTASection() {
   return (
-    <section className="py-20 bg-primary/5">
-      <div className="container text-center space-y-6">
+    <section className="py-20 relative overflow-hidden">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
+      
+      <div className="container text-center space-y-6 relative z-10">
         <motion.h2
           className="text-3xl md:text-4xl font-bold text-foreground"
           initial={{ opacity: 0, filter: "blur(8px)" }}
