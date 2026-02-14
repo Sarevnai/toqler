@@ -94,13 +94,13 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 1.0 }}
           >
             <Link to="/auth?tab=signup">
-              <Button variant="hero" size="lg" className="gap-2 relative overflow-hidden group">
+              <Button variant="default" size="lg" className="gap-2 relative overflow-hidden group">
                 Começar agora <ArrowRight className="h-4 w-4" />
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent animate-shimmer pointer-events-none" />
               </Button>
             </Link>
             <a href="#how-it-works">
-              <Button variant="hero-outline" size="lg">Ver como funciona</Button>
+              <Button variant="outline" size="lg">Ver como funciona</Button>
             </a>
           </motion.div>
         </div>

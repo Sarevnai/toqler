@@ -5,13 +5,10 @@ import { motion } from "framer-motion";
 
 export function CTASection() {
   return (
-    <section className="py-20 relative overflow-hidden">
-      {/* Subtle gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
-      
+    <section className="py-20 relative overflow-hidden bg-primary text-primary-foreground">
       <div className="container text-center space-y-6 relative z-10">
         <motion.h2
-          className="text-3xl md:text-4xl font-bold text-foreground"
+          className="text-3xl md:text-4xl font-bold"
           initial={{ opacity: 0, filter: "blur(8px)" }}
           whileInView={{ opacity: 1, filter: "blur(0px)" }}
           viewport={{ once: true }}
@@ -20,7 +17,7 @@ export function CTASection() {
           Pronto para transformar seu networking?
         </motion.h2>
         <motion.p
-          className="text-muted-foreground max-w-xl mx-auto"
+          className="text-primary-foreground/70 max-w-xl mx-auto"
           initial={{ opacity: 0, filter: "blur(6px)" }}
           whileInView={{ opacity: 1, filter: "blur(0px)" }}
           viewport={{ once: true }}
@@ -35,9 +32,9 @@ export function CTASection() {
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           <Link to="/auth?tab=signup">
-            <Button variant="hero" size="lg" className="gap-2 relative overflow-hidden">
+            <Button size="lg" className="gap-2 relative overflow-hidden bg-background text-primary hover:bg-background/90">
               Criar conta grátis <ArrowRight className="h-4 w-4" />
-              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent animate-shimmer pointer-events-none" />
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-shimmer pointer-events-none" />
             </Button>
           </Link>
         </motion.div>
