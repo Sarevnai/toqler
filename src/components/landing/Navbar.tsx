@@ -20,7 +20,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/20 bg-background/60 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="text-xl font-bold tracking-tight text-foreground">
           Toqler
@@ -38,7 +38,7 @@ export function Navbar() {
         </div>
 
         <button className="md:hidden" onClick={() => setOpen(!open)}>
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {open ? <X className="h-6 w-6 text-foreground" /> : <Menu className="h-6 w-6 text-foreground" />}
         </button>
       </div>
 
@@ -48,7 +48,7 @@ export function Navbar() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="md:hidden border-t border-border bg-background p-4 space-y-3"
+            className="md:hidden border-t border-border/20 bg-background/95 backdrop-blur-xl p-4 space-y-3"
           >
             <a href="#features" className="block text-sm text-muted-foreground" onClick={() => setOpen(false)}>Funcionalidades</a>
             <a href="#how-it-works" className="block text-sm text-muted-foreground" onClick={() => setOpen(false)}>Como funciona</a>

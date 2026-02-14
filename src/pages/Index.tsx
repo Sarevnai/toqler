@@ -6,15 +6,17 @@ import { CTASection } from "@/components/landing/CTASection";
 import { Footer } from "@/components/landing/Footer";
 
 const Index = () => (
-  <div className="min-h-screen bg-background">
-    <Navbar />
-    <main>
-      <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <CTASection />
-    </main>
-    <Footer />
+  <div className="dark">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <CTASection />
+      </main>
+      <Footer />
+    </div>
   </div>
 );
 
