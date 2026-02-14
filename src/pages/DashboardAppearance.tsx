@@ -14,25 +14,25 @@ const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "I
 const CTA_COLORS: Record<string, string> = { whatsapp: "bg-green-500", instagram: "bg-pink-500", linkedin: "bg-blue-600", website: "bg-primary" };
 
 const LAYOUT_OPTIONS = [
-  { value: "card", label: "Card" },
-  { value: "minimal", label: "Minimalista" },
-  { value: "bold", label: "Destaque" },
-];
+{ value: "card", label: "Card" },
+{ value: "minimal", label: "Minimalista" },
+{ value: "bold", label: "Destaque" }];
+
 const BUTTON_OPTIONS = [
-  { value: "rounded", label: "Arredondado" },
-  { value: "square", label: "Quadrado" },
-  { value: "pill", label: "Pílula" },
-];
+{ value: "rounded", label: "Arredondado" },
+{ value: "square", label: "Quadrado" },
+{ value: "pill", label: "Pílula" }];
+
 const FONT_OPTIONS = [
-  { value: "default", label: "Padrão" },
-  { value: "serif", label: "Serifada" },
-  { value: "mono", label: "Monoespaçada" },
-];
+{ value: "default", label: "Padrão" },
+{ value: "serif", label: "Serifada" },
+{ value: "mono", label: "Monoespaçada" }];
+
 const BG_OPTIONS = [
-  { value: "solid", label: "Sólido" },
-  { value: "gradient", label: "Gradiente" },
-  { value: "mesh", label: "Mesh" },
-];
+{ value: "solid", label: "Sólido" },
+{ value: "gradient", label: "Gradiente" },
+{ value: "mesh", label: "Mesh" }];
+
 
 const defaultLayout = {
   layout_style: "card",
@@ -43,7 +43,7 @@ const defaultLayout = {
   show_save_contact: true,
   show_lead_form: true,
   show_stats_row: true,
-  cta_order: ["whatsapp", "instagram", "linkedin", "website"],
+  cta_order: ["whatsapp", "instagram", "linkedin", "website"]
 };
 
 export default function DashboardAppearance() {
@@ -61,10 +61,10 @@ export default function DashboardAppearance() {
     const fetch = async () => {
       setLoading(true);
       const [layoutRes, companyRes, profilesRes] = await Promise.all([
-        supabase.from("profile_layouts").select("*").eq("company_id", companyId).maybeSingle(),
-        supabase.from("companies").select("*").eq("id", companyId).single(),
-        supabase.from("profiles").select("*").eq("company_id", companyId).limit(5),
-      ]);
+      supabase.from("profile_layouts").select("*").eq("company_id", companyId).maybeSingle(),
+      supabase.from("companies").select("*").eq("id", companyId).single(),
+      supabase.from("profiles").select("*").eq("company_id", companyId).limit(5)]
+      );
       if (layoutRes.data) {
         setLayout({ ...defaultLayout, ...layoutRes.data });
         setLayoutId(layoutRes.data.id);
@@ -90,15 +90,15 @@ export default function DashboardAppearance() {
       show_save_contact: layout.show_save_contact,
       show_lead_form: layout.show_lead_form,
       show_stats_row: layout.show_stats_row,
-      cta_order: layout.cta_order,
+      cta_order: layout.cta_order
     };
 
     if (layoutId) {
       const { error } = await supabase.from("profile_layouts").update(payload).eq("id", layoutId);
-      if (error) { toast.error("Erro ao salvar"); setSaving(false); return; }
+      if (error) {toast.error("Erro ao salvar");setSaving(false);return;}
     } else {
       const { data, error } = await supabase.from("profile_layouts").insert(payload).select("id").single();
-      if (error) { toast.error("Erro ao salvar"); setSaving(false); return; }
+      if (error) {toast.error("Erro ao salvar");setSaving(false);return;}
       setLayoutId(data.id);
     }
     setSaving(false);
@@ -118,11 +118,11 @@ export default function DashboardAppearance() {
   const primaryColor = company?.primary_color || "#0ea5e9";
   const fontClass = layout.font_style === "serif" ? "font-serif" : layout.font_style === "mono" ? "font-mono" : "font-sans";
   const btnRadius = layout.button_style === "pill" ? "rounded-full" : layout.button_style === "square" ? "rounded-none" : "rounded-xl";
-  const bgStyle = layout.background_style === "gradient"
-    ? { background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)` }
-    : layout.background_style === "mesh"
-      ? { background: `radial-gradient(circle at 20% 50%, ${primaryColor}10, transparent 50%), radial-gradient(circle at 80% 50%, ${primaryColor}08, transparent 50%)` }
-      : {};
+  const bgStyle = layout.background_style === "gradient" ?
+  { background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)` } :
+  layout.background_style === "mesh" ?
+  { background: `radial-gradient(circle at 20% 50%, ${primaryColor}10, transparent 50%), radial-gradient(circle at 80% 50%, ${primaryColor}08, transparent 50%)` } :
+  {};
 
   const ctaOrder = layout.cta_order as string[];
   const p = previewProfile;
@@ -177,16 +177,16 @@ export default function DashboardAppearance() {
             <CardHeader><CardTitle className="text-base">Seções visíveis</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {([
-                ["show_company_header", "Cabeçalho da empresa"],
-                ["show_save_contact", "Botão Salvar Contato"],
-                ["show_lead_form", "Formulário de lead"],
-                ["show_stats_row", "Estatísticas"],
-              ] as [string, string][]).map(([key, label]) => (
-                <div key={key} className="flex items-center justify-between">
+              ["show_company_header", "Cabeçalho da empresa"],
+              ["show_save_contact", "Botão Salvar Contato"],
+              ["show_lead_form", "Formulário de lead"],
+              ["show_stats_row", "Estatísticas"]] as
+              [string, string][]).map(([key, label]) =>
+              <div key={key} className="flex items-center justify-between">
                   <Label>{label}</Label>
                   <Switch checked={layout[key]} onCheckedChange={(v) => setLayout({ ...layout, [key]: v })} />
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
@@ -204,8 +204,8 @@ export default function DashboardAppearance() {
                       <Button variant="ghost" size="sm" disabled={i === 0} onClick={() => moveCTA(i, "up")} className="h-7 w-7 p-0">↑</Button>
                       <Button variant="ghost" size="sm" disabled={i === ctaOrder.length - 1} onClick={() => moveCTA(i, "down")} className="h-7 w-7 p-0">↓</Button>
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
             </CardContent>
           </Card>
@@ -222,34 +222,34 @@ export default function DashboardAppearance() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Preview</CardTitle>
-                {profiles.length > 1 && (
-                  <Select value={previewProfile?.id} onValueChange={(v) => setPreviewProfile(profiles.find((pp) => pp.id === v))}>
+                {profiles.length > 1 &&
+                <Select value={previewProfile?.id} onValueChange={(v) => setPreviewProfile(profiles.find((pp) => pp.id === v))}>
                     <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{profiles.map((pp) => <SelectItem key={pp.id} value={pp.id}>{pp.name}</SelectItem>)}</SelectContent>
                   </Select>
-                )}
+                }
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <div
                 className={`${fontClass} p-4 space-y-4 rounded-b-lg min-h-[500px]`}
-                style={bgStyle}
-              >
+                style={bgStyle}>
+
                 {/* Company header */}
-                {layout.show_company_header && company && (
-                  <div className="text-center">
-                    {company.logo_url && <img src={company.logo_url} alt="" className="h-6 mx-auto mb-1" />}
+                {layout.show_company_header && company &&
+                <div className="text-center">
+                    {company.logo_url && <img src={company.logo_url} alt="" className="h-6 mx-auto mb-1 shadow" />}
                     <p className="text-[10px] text-muted-foreground">{company.name}</p>
                   </div>
-                )}
+                }
 
                 {/* Photo */}
                 <div className={`aspect-[4/5] ${btnRadius} overflow-hidden bg-muted`}>
-                  {p?.photo_url ? (
-                    <img src={p.photo_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"><User className="h-12 w-12 text-muted-foreground" /></div>
-                  )}
+                  {p?.photo_url ?
+                  <img src={p.photo_url} alt="" className="w-full h-full object-cover" /> :
+
+                  <div className="w-full h-full flex items-center justify-center"><User className="h-12 w-12 text-muted-foreground" /></div>
+                  }
                 </div>
 
                 {/* Name */}
@@ -260,14 +260,14 @@ export default function DashboardAppearance() {
                 </div>
 
                 {/* Save contact */}
-                {layout.show_save_contact && (
-                  <div
-                    className={`w-full py-2.5 text-center text-sm font-medium text-primary-foreground ${btnRadius}`}
-                    style={{ backgroundColor: primaryColor }}
-                  >
+                {layout.show_save_contact &&
+                <div
+                  className={`w-full py-2.5 text-center text-sm font-medium text-primary-foreground ${btnRadius}`}
+                  style={{ backgroundColor: primaryColor }}>
+
                     <Download className="inline h-3.5 w-3.5 mr-1.5" />Salvar Contato
                   </div>
-                )}
+                }
 
                 {/* CTAs */}
                 <div className="space-y-2">
@@ -279,41 +279,41 @@ export default function DashboardAppearance() {
                           <Icon className="h-4 w-4" />
                         </div>
                         <span className="text-sm font-medium">{CTA_LABELS[type]}</span>
-                      </div>
-                    );
+                      </div>);
+
                   })}
                 </div>
 
                 {/* Lead form */}
-                {layout.show_lead_form && (
-                  <div className={`border border-border ${btnRadius} p-4 space-y-2`}>
+                {layout.show_lead_form &&
+                <div className={`border border-border ${btnRadius} p-4 space-y-2`}>
                     <p className="text-sm font-semibold">Deixe seu contato</p>
                     <div className="space-y-1.5">
                       <div className="h-8 bg-muted rounded" />
                       <div className="h-8 bg-muted rounded" />
                       <div
-                        className={`h-8 text-center text-xs text-primary-foreground flex items-center justify-center ${btnRadius}`}
-                        style={{ backgroundColor: primaryColor }}
-                      >
+                      className={`h-8 text-center text-xs text-primary-foreground flex items-center justify-center ${btnRadius}`}
+                      style={{ backgroundColor: primaryColor }}>
+
                         Enviar
                       </div>
                     </div>
                   </div>
-                )}
+                }
 
                 {/* Branding */}
-                {!company?.hide_branding && (
-                  <div className="text-center pt-2">
+                {!company?.hide_branding &&
+                <div className="text-center pt-2">
                     <span className="text-[10px] text-muted-foreground/50 inline-flex items-center gap-1">
                       Powered by Toqler
                     </span>
                   </div>
-                )}
+                }
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
