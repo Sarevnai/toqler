@@ -16,11 +16,10 @@ import { ptBR } from "date-fns/locale";
 import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import type { NfcCardWithProfile, Profile } from "@/types/entities";
 
-const SLUG_REGEX = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
 const BASE_URL = "https://toqler.lovable.app/c/";
 
-function generateSlug(label: string): string {
-  return label
+function slugify(text: string): string {
+  return text
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9\s-]/g, "")
@@ -31,25 +30,22 @@ function generateSlug(label: string): string {
     .slice(0, 60);
 }
 
-function validateSlug(slug: string): string | null {
-  if (!slug) return "Slug é obrigatório";
-  if (slug.length < 3) return "Mínimo 3 caracteres";
-  if (slug.length > 60) return "Máximo 60 caracteres";
-  if (!SLUG_REGEX.test(slug)) return "Use apenas letras minúsculas, números, hífens e barras";
-  return null;
-}
-
 export default function DashboardCards() {
-  const { companyId } = useAuth();
+  const { companyId, companySlug } = useAuth();
   const [cards, setCards] = useState<NfcCardWithProfile[]>([]);
   const [profiles, setProfiles] = useState<Pick<Profile, "id" | "name">[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ label: "", profile_id: "", slug: "" });
-  const [slugError, setSlugError] = useState<string | null>(null);
+  const [form, setForm] = useState({ label: "", profile_id: "" });
   const [saving, setSaving] = useState(false);
   const { confirm, dialogProps } = useConfirmDialog();
+
+  // Computed slug preview
+  const selectedProfile = profiles.find((p) => p.id === form.profile_id);
+  const generatedSlug = companySlug && selectedProfile
+    ? `${companySlug}/${slugify(selectedProfile.name)}`
+    : null;
 
   const fetchData = async () => {
     if (!companyId) return;
@@ -70,42 +66,43 @@ export default function DashboardCards() {
     return bytes.join(":");
   };
 
-  const handleLabelChange = (label: string) => {
-    const slug = generateSlug(label);
-    setForm((f) => ({ ...f, label, slug }));
-    setSlugError(validateSlug(slug));
-  };
-
-  const handleSlugChange = (slug: string) => {
-    setForm((f) => ({ ...f, slug }));
-    setSlugError(validateSlug(slug));
-  };
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const err = validateSlug(form.slug);
-    if (err) { setSlugError(err); return; }
-    if (!companyId) return;
+    if (!companyId || !generatedSlug || !form.profile_id) return;
     setSaving(true);
     const tag_uid = generateTagUid();
-    const insertData = {
-      label: form.label,
-      tag_uid,
-      company_id: companyId,
-      slug: form.slug,
-      ...(form.profile_id ? { profile_id: form.profile_id } : {}),
-    };
-    const { error } = await supabase.from("nfc_cards").insert(insertData);
-    setSaving(false);
-    if (error) {
-      if (error.code === "23505") { toast.error("Este slug já está em uso"); return; }
+
+    // Try slug, handle collisions with suffix
+    let finalSlug = generatedSlug;
+    let attempt = 0;
+    while (true) {
+      const { error } = await supabase.from("nfc_cards").insert({
+        label: form.label,
+        tag_uid,
+        company_id: companyId,
+        slug: finalSlug,
+        profile_id: form.profile_id,
+      });
+      if (!error) break;
+      if (error.code === "23505") {
+        attempt++;
+        finalSlug = `${generatedSlug}-${attempt + 1}`;
+        if (attempt > 10) {
+          toast.error("Não foi possível gerar um slug único");
+          setSaving(false);
+          return;
+        }
+        continue;
+      }
       toast.error("Erro ao criar cartão");
+      setSaving(false);
       return;
     }
+
+    setSaving(false);
     toast.success("Cartão criado!");
     setDialogOpen(false);
-    setForm({ label: "", profile_id: "", slug: "" });
-    setSlugError(null);
+    setForm({ label: "", profile_id: "" });
     fetchData();
   };
 
@@ -175,30 +172,27 @@ export default function DashboardCards() {
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="space-y-2">
                 <Label>Nome do cartão *</Label>
-                <Input value={form.label} onChange={(e) => handleLabelChange(e.target.value)} required placeholder="Ex: Cartão do João" />
+                <Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} required placeholder="Ex: Cartão do João" />
               </div>
               <div className="space-y-2">
-                <Label>Slug (URL personalizada) *</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground shrink-0">/c/</span>
-                  <Input value={form.slug} onChange={(e) => handleSlugChange(e.target.value)} placeholder="empresa/joao-silva" />
-                </div>
-                {slugError && <p className="text-xs text-destructive">{slugError}</p>}
-                {form.slug && !slugError && (
-                  <p className="text-xs text-muted-foreground truncate">Link: {BASE_URL}{form.slug}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Vincular a um perfil</Label>
-                <Select value={form.profile_id} onValueChange={(v) => setForm({ ...form, profile_id: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione um perfil (opcional)" /></SelectTrigger>
+                <Label>Vincular a um perfil *</Label>
+                <Select value={form.profile_id} onValueChange={(v) => setForm({ ...form, profile_id: v })} required>
+                  <SelectTrigger><SelectValue placeholder="Selecione um perfil" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
                     {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full" disabled={saving || !!slugError}>
+              {generatedSlug && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Link do cartão</Label>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 rounded-md px-2.5 py-2">
+                    <ExternalLink className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{BASE_URL}{generatedSlug}</span>
+                  </div>
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={saving || !form.profile_id}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar cartão
               </Button>
             </form>

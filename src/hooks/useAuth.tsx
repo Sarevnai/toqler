@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   companyId: string | null;
+  companySlug: string | null;
   companyRole: "admin" | "member" | null;
   signOut: () => Promise<void>;
 }
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   companyId: null,
+  companySlug: null,
   companyRole: null,
   signOut: async () => {},
 });
@@ -27,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [companySlug, setCompanySlug] = useState<string | null>(null);
   const [companyRole, setCompanyRole] = useState<"admin" | "member" | null>(null);
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (!session?.user) {
         setCompanyId(null);
+        setCompanySlug(null);
         setCompanyRole(null);
         setLoading(false);
       }
@@ -66,12 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Now fetch membership (may have been just created by invitation acceptance)
       const { data } = await supabase
         .from("company_memberships")
-        .select("company_id, role")
+        .select("company_id, role, companies(slug)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
       setCompanyId(data?.company_id ?? null);
+      setCompanySlug((data?.companies as any)?.slug ?? null);
       setCompanyRole((data?.role as "admin" | "member") ?? null);
       setLoading(false);
     };
@@ -83,11 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setCompanyId(null);
+    setCompanySlug(null);
     setCompanyRole(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, companyId, companyRole, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, companyId, companySlug, companyRole, signOut }}>
       {children}
     </AuthContext.Provider>
   );
