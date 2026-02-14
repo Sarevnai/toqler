@@ -33,7 +33,7 @@ export function Navbar() {
             <Button variant="ghost" size="sm">Entrar</Button>
           </Link>
           <Link to="/auth?tab=signup">
-            <Button variant="hero" size="sm">Começar agora</Button>
+            <Button variant="default" size="sm">Começar agora</Button>
           </Link>
         </div>
 
@@ -53,7 +53,7 @@ export function Navbar() {
             <a href="#features" className="block text-sm text-muted-foreground" onClick={() => setOpen(false)}>Funcionalidades</a>
             <a href="#how-it-works" className="block text-sm text-muted-foreground" onClick={() => setOpen(false)}>Como funciona</a>
             <Link to="/auth" className="block"><Button variant="ghost" className="w-full">Entrar</Button></Link>
-            <Link to="/auth?tab=signup" className="block"><Button variant="hero" className="w-full">Começar agora</Button></Link>
+            <Link to="/auth?tab=signup" className="block"><Button variant="default" className="w-full">Começar agora</Button></Link>
           </motion.div>
         )}
       </AnimatePresence>

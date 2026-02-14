@@ -18,9 +18,9 @@ function AnimatedLine() {
   const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
-    <div ref={ref} className="hidden lg:block absolute top-0 bottom-0 left-7 w-0.5 bg-border">
+    <div ref={ref} className="hidden lg:block absolute top-0 bottom-0 left-7 w-0.5 bg-white/10">
       <motion.div
-        className="w-full bg-primary origin-top"
+        className="w-full bg-white/40 origin-top"
         style={{ scaleY, height: "100%" }}
       />
     </div>
@@ -29,11 +29,11 @@ function AnimatedLine() {
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="py-20">
+    <section id="how-it-works" className="py-20 bg-primary text-primary-foreground">
       <div className="container space-y-12">
         <div className="text-center space-y-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">Como funciona</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">Em 4 passos simples, sua equipe estará pronta para networking digital.</p>
+          <h2 className="text-3xl md:text-4xl font-bold">Como funciona</h2>
+          <p className="text-primary-foreground/70 max-w-2xl mx-auto">Em 4 passos simples, sua equipe estará pronta para networking digital.</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -45,7 +45,7 @@ export function HowItWorksSection() {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <div className="rounded-2xl overflow-hidden border border-border/50 shadow-xl">
+            <div className="rounded-2xl overflow-hidden border border-white/10 shadow-xl">
               <img
                 src={dashboardPreview}
                 alt="Toqler Dashboard em operação"
@@ -53,7 +53,7 @@ export function HowItWorksSection() {
                 loading="lazy"
               />
             </div>
-            <div className="absolute -z-10 -bottom-8 -right-8 h-48 w-48 rounded-full bg-primary/10 blur-3xl animate-glow-pulse" />
+            <div className="absolute -z-10 -bottom-8 -right-8 h-48 w-48 rounded-full bg-white/5 blur-3xl animate-glow-pulse" />
           </motion.div>
 
           {/* Steps */}
@@ -69,12 +69,12 @@ export function HowItWorksSection() {
                 className="flex gap-6 relative"
               >
                 <motion.div
-                  className="flex-shrink-0 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-bold z-10"
+                  className="flex-shrink-0 flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-primary-foreground text-lg font-bold z-10"
                   whileInView={{
                     boxShadow: [
-                      "0 0 0 0 hsl(var(--primary) / 0.4)",
-                      "0 0 0 12px hsl(var(--primary) / 0)",
-                      "0 0 0 0 hsl(var(--primary) / 0)",
+                      "0 0 0 0 rgba(255,255,255,0.2)",
+                      "0 0 0 12px rgba(255,255,255,0)",
+                      "0 0 0 0 rgba(255,255,255,0)",
                     ],
                   }}
                   viewport={{ once: true }}
@@ -83,8 +83,8 @@ export function HowItWorksSection() {
                   {s.num}
                 </motion.div>
                 <div className="pt-2 space-y-2">
-                  <h3 className="text-lg font-semibold text-foreground">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground">{s.desc}</p>
+                  <h3 className="text-lg font-semibold">{s.title}</h3>
+                  <p className="text-sm text-primary-foreground/60">{s.desc}</p>
                 </div>
               </motion.div>
             ))}

@@ -98,9 +98,9 @@ export default {
 			'scroll-bounce': 'scroll-bounce 2s ease-in-out infinite'
 		},
   		fontFamily: {
-  			sans: ['DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+  			sans: ['Inter', 'DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
   			serif: ['Libre Caslon Text', 'ui-serif', 'Georgia', 'serif'],
-  			mono: ['Cousine', 'ui-monospace', 'SFMono-Regular', 'monospace']
+  			mono: ['JetBrains Mono', 'Cousine', 'ui-monospace', 'SFMono-Regular', 'monospace']
   		}
   	}
   },
