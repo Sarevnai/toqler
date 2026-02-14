@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wifi, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Onboarding() {
@@ -21,7 +21,7 @@ export default function Onboarding() {
     setLoading(true);
 
     const { error } = await supabase.rpc("create_company_with_membership", {
-      _name: name.trim(),
+      _name: name.trim()
     });
 
     if (error) {
@@ -39,7 +39,7 @@ export default function Onboarding() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto flex items-center gap-2 text-2xl font-bold">
-            <Wifi className="h-7 w-7 text-primary" />
+            
             Toqler
           </div>
           <CardTitle>Bem-vindo! 🎉</CardTitle>
@@ -58,6 +58,6 @@ export default function Onboarding() {
           </form>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }
