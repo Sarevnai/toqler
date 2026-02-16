@@ -1,15 +1,37 @@
 
 
-# Trocar imagem do Dashboard Preview no Hero
+# Corrigir redirecionamento do cartao NFC
 
-Substituir o arquivo `src/assets/dashboard-preview.png` pela nova imagem enviada (`user-uploads://dashboard.png`).
+## Problema
 
-## Passos
+Quando o usuario acessa `toqler.lovable.app/c/greattings/ian-veras`, o sistema resolve o slug corretamente mas redireciona para `/p/e706e428-...`, expondo o UUID na barra de endereco. A URL amigavel do slug e perdida.
 
-1. Copiar `user-uploads://dashboard.png` para `src/assets/dashboard-preview.png`, sobrescrevendo o arquivo atual
-2. Nenhuma alteracao de codigo necessaria -- o `HeroSection.tsx` ja importa `@/assets/dashboard-preview.png`
+## Solucao
 
-## Resultado
+Alterar o `CardRedirect.tsx` para **renderizar o perfil publico diretamente** na rota `/c/`, em vez de redirecionar para `/p/:profileId`.
 
-A landing page exibira a nova screenshot do dashboard Toqler com sidebar, cards de metricas e grafico "Ultimos 7 dias".
+## Detalhes tecnicos
+
+### Passo 1 - Refatorar CardRedirect.tsx
+
+Em vez de `navigate('/p/${card.profile_id}')`, armazenar o `profile_id` resolvido no state e renderizar o componente `PublicProfile` diretamente.
+
+Para isso, o `PublicProfile` precisa aceitar um `profileId` via props (alem de via `useParams`).
+
+### Passo 2 - Atualizar PublicProfile.tsx
+
+Modificar o componente para aceitar uma prop opcional `profileId`, com fallback para `useParams().profileId`. Isso permite que seja usado tanto na rota `/p/:profileId` quanto embutido no `CardRedirect`.
+
+```text
+Antes:
+  /c/greattings/ian-veras -> resolve slug -> navigate('/p/uuid') -> URL muda para UUID
+
+Depois:
+  /c/greattings/ian-veras -> resolve slug -> renderiza PublicProfile inline -> URL permanece /c/greattings/ian-veras
+```
+
+### Arquivos alterados
+
+- `src/pages/CardRedirect.tsx` — renderizar PublicProfile diretamente em vez de redirecionar
+- `src/pages/PublicProfile.tsx` — aceitar prop `profileId` opcional
 
