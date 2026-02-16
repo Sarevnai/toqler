@@ -37,7 +37,7 @@ export default function DashboardCards() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ label: "", profile_id: "" });
+  const [form, setForm] = useState({ label: "", profile_id: "", tag_uid: "" });
   const [saving, setSaving] = useState(false);
   const { confirm, dialogProps } = useConfirmDialog();
 
@@ -70,7 +70,7 @@ export default function DashboardCards() {
     e.preventDefault();
     if (!companyId || !generatedSlug || !form.profile_id) return;
     setSaving(true);
-    const tag_uid = generateTagUid();
+    const tag_uid = form.tag_uid.trim() || generateTagUid();
 
     // Try slug, handle collisions with suffix
     let finalSlug = generatedSlug;
@@ -102,7 +102,7 @@ export default function DashboardCards() {
     setSaving(false);
     toast.success("Cartão criado!");
     setDialogOpen(false);
-    setForm({ label: "", profile_id: "" });
+    setForm({ label: "", profile_id: "", tag_uid: "" });
     fetchData();
   };
 
@@ -182,6 +182,11 @@ export default function DashboardCards() {
                     {profiles.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Número de série (UID)</Label>
+                <Input value={form.tag_uid} onChange={(e) => setForm({ ...form, tag_uid: e.target.value })} placeholder="Ex: 04:FB:5B:52:6E:1E:90 (opcional)" />
+                <p className="text-xs text-muted-foreground">Deixe em branco para gerar automaticamente</p>
               </div>
               {generatedSlug && (
                 <div className="space-y-1">
