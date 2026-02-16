@@ -13,41 +13,47 @@ serve(async (req) => {
   }
 
   try {
-    const { lead_id } = await req.json();
-    if (!lead_id) {
-      return new Response(JSON.stringify({ error: "lead_id required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Verify lead exists and was created recently
-    const { data: lead, error: leadError } = await adminClient
-      .from("leads")
-      .select("id, company_id, name, email, phone, profile_id, created_at")
-      .eq("id", lead_id)
-      .maybeSingle();
+    let lead: { name: string; email: string; profile_id: string | null };
+    let company_id: string;
 
-    if (leadError || !lead) {
-      return new Response(JSON.stringify({ error: "Lead not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (body.lead_id) {
+      // Legacy format
+      const { data, error } = await adminClient
+        .from("leads")
+        .select("id, company_id, name, email, phone, profile_id, created_at")
+        .eq("id", body.lead_id)
+        .maybeSingle();
+
+      if (error || !data) {
+        return new Response(JSON.stringify({ error: "Lead not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const createdAt = new Date(data.created_at).getTime();
+      if (Date.now() - createdAt > 60000) {
+        return new Response(JSON.stringify({ error: "Lead too old" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      company_id = data.company_id;
+      lead = { name: data.name, email: data.email, profile_id: data.profile_id };
+    } else if (body.company_id && body.email) {
+      // New format: data passed directly
+      company_id = body.company_id;
+      lead = { name: body.name || "", email: body.email, profile_id: body.profile_id || null };
+    } else {
+      return new Response(JSON.stringify({ error: "lead_id or (company_id + email) required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const createdAt = new Date(lead.created_at).getTime();
-    if (Date.now() - createdAt > 60000) {
-      return new Response(JSON.stringify({ error: "Lead too old" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const company_id = lead.company_id;
 
     // Check if follow_up_email is enabled for this company
     const { data: company } = await adminClient
