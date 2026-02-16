@@ -1,37 +1,20 @@
 
 
-# Corrigir redirecionamento do cartao NFC
+# Atualizar UID do cartao NFC com numero de serie real
 
-## Problema
+## O que sera feito
 
-Quando o usuario acessa `toqler.lovable.app/c/greattings/ian-veras`, o sistema resolve o slug corretamente mas redireciona para `/p/e706e428-...`, expondo o UUID na barra de endereco. A URL amigavel do slug e perdida.
-
-## Solucao
-
-Alterar o `CardRedirect.tsx` para **renderizar o perfil publico diretamente** na rota `/c/`, em vez de redirecionar para `/p/:profileId`.
+Atualizar o campo `tag_uid` do cartao "Ian Veras" de `1F:7B:1D:5C:FC:12:1F` (gerado automaticamente) para `04:FB:5B:52:6E:1E:90` (numero de serie real do cartao fisico).
 
 ## Detalhes tecnicos
 
-### Passo 1 - Refatorar CardRedirect.tsx
+Executar a seguinte migracao SQL:
 
-Em vez de `navigate('/p/${card.profile_id}')`, armazenar o `profile_id` resolvido no state e renderizar o componente `PublicProfile` diretamente.
-
-Para isso, o `PublicProfile` precisa aceitar um `profileId` via props (alem de via `useParams`).
-
-### Passo 2 - Atualizar PublicProfile.tsx
-
-Modificar o componente para aceitar uma prop opcional `profileId`, com fallback para `useParams().profileId`. Isso permite que seja usado tanto na rota `/p/:profileId` quanto embutido no `CardRedirect`.
-
-```text
-Antes:
-  /c/greattings/ian-veras -> resolve slug -> navigate('/p/uuid') -> URL muda para UUID
-
-Depois:
-  /c/greattings/ian-veras -> resolve slug -> renderiza PublicProfile inline -> URL permanece /c/greattings/ian-veras
+```sql
+UPDATE nfc_cards 
+SET tag_uid = '04:FB:5B:52:6E:1E:90', updated_at = now()
+WHERE id = '15c39e38-f2a1-4f26-8aef-010d6339553e';
 ```
 
-### Arquivos alterados
-
-- `src/pages/CardRedirect.tsx` — renderizar PublicProfile diretamente em vez de redirecionar
-- `src/pages/PublicProfile.tsx` — aceitar prop `profileId` opcional
+Nenhuma alteracao de codigo necessaria.
 
