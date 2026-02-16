@@ -61,8 +61,9 @@ function getDevice(): string {
   return "desktop";
 }
 
-export default function PublicProfile() {
-  const { profileId } = useParams();
+export default function PublicProfile({ profileId: propProfileId }: { profileId?: string } = {}) {
+  const { profileId: paramProfileId } = useParams();
+  const profileId = propProfileId || paramProfileId;
   const [profile, setProfile] = useState<any>(null);
   const [layout, setLayout] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
