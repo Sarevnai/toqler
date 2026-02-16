@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { CreditCard, Plus, Search, Trash2, Loader2, Link2, Copy, Lock, ExternalLink } from "lucide-react";
+import { CreditCard, Plus, Search, Trash2, Loader2, Link2, Copy, Lock, ExternalLink, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -37,6 +37,7 @@ export default function DashboardCards() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<NfcCardWithProfile | null>(null);
   const [form, setForm] = useState({ label: "", profile_id: "", tag_uid: "" });
   const [saving, setSaving] = useState(false);
   const { confirm, dialogProps } = useConfirmDialog();
@@ -66,42 +67,72 @@ export default function DashboardCards() {
     return bytes.join(":");
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!companyId || !generatedSlug || !form.profile_id) return;
-    setSaving(true);
-    const tag_uid = form.tag_uid.trim() || generateTagUid();
+  const openCreate = () => {
+    setEditingCard(null);
+    setForm({ label: "", profile_id: "", tag_uid: "" });
+    setDialogOpen(true);
+  };
 
-    // Try slug, handle collisions with suffix
-    let finalSlug = generatedSlug;
-    let attempt = 0;
-    while (true) {
-      const { error } = await supabase.from("nfc_cards").insert({
+  const openEdit = (card: NfcCardWithProfile) => {
+    setEditingCard(card);
+    setForm({ label: card.label, profile_id: card.profile_id || "", tag_uid: card.tag_uid });
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId || !form.profile_id) return;
+    setSaving(true);
+
+    if (editingCard) {
+      // Update existing card
+      const updates: Record<string, unknown> = {
         label: form.label,
-        tag_uid,
-        company_id: companyId,
-        slug: finalSlug,
+        tag_uid: form.tag_uid.trim() || editingCard.tag_uid,
         profile_id: form.profile_id,
-      });
-      if (!error) break;
-      if (error.code === "23505") {
-        attempt++;
-        finalSlug = `${generatedSlug}-${attempt + 1}`;
-        if (attempt > 10) {
-          toast.error("Não foi possível gerar um slug único");
-          setSaving(false);
-          return;
-        }
-        continue;
+      };
+      const { error } = await supabase.from("nfc_cards").update(updates).eq("id", editingCard.id);
+      if (error) {
+        toast.error("Erro ao atualizar cartão");
+        setSaving(false);
+        return;
       }
-      toast.error("Erro ao criar cartão");
-      setSaving(false);
-      return;
+      toast.success("Cartão atualizado!");
+    } else {
+      // Create new card
+      if (!generatedSlug) { setSaving(false); return; }
+      const tag_uid = form.tag_uid.trim() || generateTagUid();
+      let finalSlug = generatedSlug;
+      let attempt = 0;
+      while (true) {
+        const { error } = await supabase.from("nfc_cards").insert({
+          label: form.label,
+          tag_uid,
+          company_id: companyId,
+          slug: finalSlug,
+          profile_id: form.profile_id,
+        });
+        if (!error) break;
+        if (error.code === "23505") {
+          attempt++;
+          finalSlug = `${generatedSlug}-${attempt + 1}`;
+          if (attempt > 10) {
+            toast.error("Não foi possível gerar um slug único");
+            setSaving(false);
+            return;
+          }
+          continue;
+        }
+        toast.error("Erro ao criar cartão");
+        setSaving(false);
+        return;
+      }
+      toast.success("Cartão criado!");
     }
 
     setSaving(false);
-    toast.success("Cartão criado!");
     setDialogOpen(false);
+    setEditingCard(null);
     setForm({ label: "", profile_id: "", tag_uid: "" });
     fetchData();
   };
@@ -165,11 +196,11 @@ export default function DashboardCards() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="h-4 w-4" />Novo cartão</Button>
+            <Button className="gap-2" onClick={openCreate}><Plus className="h-4 w-4" />Novo cartão</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Criar cartão NFC</DialogTitle></DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
+            <DialogHeader><DialogTitle>{editingCard ? "Editar cartão NFC" : "Criar cartão NFC"}</DialogTitle></DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label>Nome do cartão *</Label>
                 <Input value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} required placeholder="Ex: Cartão do João" />
@@ -198,7 +229,7 @@ export default function DashboardCards() {
                 </div>
               )}
               <Button type="submit" className="w-full" disabled={saving || !form.profile_id}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar cartão
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editingCard ? "Salvar alterações" : "Criar cartão"}
               </Button>
             </form>
           </DialogContent>
@@ -241,6 +272,7 @@ export default function DashboardCards() {
                         </SelectContent>
                       </Select>
                       <Switch checked={c.status === "active"} onCheckedChange={() => toggleStatus(c.id, c.status)} />
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => deleteCard(c.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </div>
