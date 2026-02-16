@@ -1,20 +1,32 @@
 
 
-# Atualizar UID do cartao NFC com numero de serie real
+# Corrigir erro de envio de leads na pagina publica
 
-## O que sera feito
+## Problema
 
-Atualizar o campo `tag_uid` do cartao "Ian Veras" de `1F:7B:1D:5C:FC:12:1F` (gerado automaticamente) para `04:FB:5B:52:6E:1E:90` (numero de serie real do cartao fisico).
+O formulario de contato na pagina publica retorna "Erro ao enviar" porque a policy de INSERT na tabela `leads` e do tipo RESTRICTIVE. No PostgreSQL, policies restritivas apenas filtram o que ja foi permitido por uma policy PERMISSIVE. Como nao ha nenhuma policy permissiva de INSERT, todos os inserts sao negados.
+
+## Solucao
+
+Recriar a policy de INSERT na tabela `leads` como PERMISSIVE em vez de RESTRICTIVE. A regra de negocio permanece a mesma: exigir `company_id IS NOT NULL` e `consent = true`.
 
 ## Detalhes tecnicos
 
 Executar a seguinte migracao SQL:
 
 ```sql
-UPDATE nfc_cards 
-SET tag_uid = '04:FB:5B:52:6E:1E:90', updated_at = now()
-WHERE id = '15c39e38-f2a1-4f26-8aef-010d6339553e';
+-- Remove a policy restritiva atual
+DROP POLICY IF EXISTS "Leads require consent and company reference" ON public.leads;
+
+-- Recria como permissiva
+CREATE POLICY "Leads require consent and company reference"
+  ON public.leads
+  FOR INSERT
+  TO public
+  WITH CHECK ((company_id IS NOT NULL) AND (consent = true));
 ```
 
-Nenhuma alteracao de codigo necessaria.
+Isso permite que visitantes anonimos (role `anon`) insiram leads desde que informem `company_id` e `consent = true`.
+
+Nenhuma alteracao de codigo necessaria — apenas a correcao da policy no banco.
 
