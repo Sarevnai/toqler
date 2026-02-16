@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import PublicProfile from "./PublicProfile";
 
 export default function CardRedirect() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [resolvedProfileId, setResolvedProfileId] = useState<string | null>(null);
 
-  // Extract slug from path: /c/empresa/joao-silva -> empresa/joao-silva
   const slug = location.pathname.replace(/^\/c\//, "");
 
   useEffect(() => {
@@ -51,11 +51,15 @@ export default function CardRedirect() {
         source: "nfc",
       });
 
-      navigate(`/p/${card.profile_id}`, { replace: true });
+      setResolvedProfileId(card.profile_id);
     };
 
     resolve();
-  }, [slug, navigate]);
+  }, [slug]);
+
+  if (resolvedProfileId) {
+    return <PublicProfile profileId={resolvedProfileId} />;
+  }
 
   if (error) {
     return (
