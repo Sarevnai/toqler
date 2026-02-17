@@ -304,8 +304,8 @@ export default function DashboardAppearance() {
                 </div>
 
                 {/* Card body */}
-                <div className="relative z-10 -mt-4 rounded-2xl pt-5 pb-3 py-[12px] px-[25px] mx-[16px] mb-[17px] my-[20px]" style={{ background: T.card }}>
-                  <h2 className="font-display text-xl font-semibold leading-tight mt-[77px]" style={{ color: T.text1 }}>{p?.name || "Nome do perfil"}</h2>
+                <div className="relative z-10 -mt-4 rounded-2xl pt-5 pb-3 px-[25px] mx-[16px] mb-[17px] my-[20px] py-0" style={{ background: T.card }}>
+                  <h2 className="font-display text-xl font-semibold leading-tight" style={{ color: T.text1 }}>{p?.name || "Nome do perfil"}</h2>
                   {p?.role_title &&
                   <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.text2 }}>
                       {p.role_title}{company ? ` at ${company.name}` : ""}
