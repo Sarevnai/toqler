@@ -29,6 +29,11 @@ import { z } from "zod";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import LinkedInIcon from "@/components/icons/LinkedInIcon";
 import InstagramIcon from "@/components/icons/InstagramIcon";
+import YouTubeIcon from "@/components/icons/YouTubeIcon";
+import TikTokIcon from "@/components/icons/TikTokIcon";
+import GitHubIcon from "@/components/icons/GitHubIcon";
+import XIcon from "@/components/icons/XIcon";
+import PinterestIcon from "@/components/icons/PinterestIcon";
 import { motion } from "framer-motion";
 
 /* ── Helpers ── */
@@ -88,6 +93,11 @@ const SOCIAL_ITEMS = [
   { key: "instagram", label: "Instagram", icon: InstagramIcon, url: (v: string) => `https://instagram.com/${v.replace("@", "")}` },
   { key: "whatsapp", label: "WhatsApp", icon: WhatsAppIcon, url: (v: string) => `https://wa.me/${v.replace(/\D/g, "")}` },
   { key: "website", label: "Website", icon: Globe, url: (v: string) => v.startsWith("http") ? v : `https://${v}` },
+  { key: "youtube", label: "YouTube", icon: YouTubeIcon, url: (v: string) => v.startsWith("http") ? v : `https://youtube.com/${v}` },
+  { key: "tiktok", label: "TikTok", icon: TikTokIcon, url: (v: string) => v.startsWith("http") ? v : `https://tiktok.com/@${v.replace("@", "")}` },
+  { key: "github", label: "GitHub", icon: GitHubIcon, url: (v: string) => v.startsWith("http") ? v : `https://github.com/${v}` },
+  { key: "twitter", label: "X", icon: XIcon, url: (v: string) => v.startsWith("http") ? v : `https://x.com/${v.replace("@", "")}` },
+  { key: "pinterest", label: "Pinterest", icon: PinterestIcon, url: (v: string) => v.startsWith("http") ? v : `https://pinterest.com/${v}` },
 ] as const;
 
 /* ── Component ── */
