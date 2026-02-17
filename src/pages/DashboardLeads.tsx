@@ -5,10 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Search, Loader2, ChevronLeft, ChevronRight, Bell } from "lucide-react";
+import { Download, Search, Loader2, ChevronLeft, ChevronRight, Bell, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { EditLeadDialog } from "@/components/dashboard/EditLeadDialog";
+import type { LeadWithProfile } from "@/types/entities";
 
 const PAGE_SIZE = 20;
 
@@ -22,6 +24,7 @@ export default function DashboardLeads() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [editingLead, setEditingLead] = useState<LeadWithProfile | null>(null);
 
   const fetchLeads = useCallback(async () => {
     if (!companyId) return;
@@ -184,6 +187,7 @@ export default function DashboardLeads() {
                 <TableHead className="hidden md:table-cell">Telefone</TableHead>
                 <TableHead className="hidden md:table-cell">Perfil</TableHead>
                 <TableHead>Data</TableHead>
+                <TableHead className="w-[60px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -194,10 +198,15 @@ export default function DashboardLeads() {
                   <TableCell className="hidden md:table-cell">{l.phone || "—"}</TableCell>
                   <TableCell className="hidden md:table-cell">{l.profiles?.name || "—"}</TableCell>
                   <TableCell>{format(new Date(l.created_at), "dd/MM/yyyy", { locale: ptBR })}</TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="icon" onClick={() => setEditingLead(l)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {leads.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum lead encontrado</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum lead encontrado</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -220,6 +229,13 @@ export default function DashboardLeads() {
           )}
         </div>
       )}
+
+      <EditLeadDialog
+        lead={editingLead}
+        open={!!editingLead}
+        onOpenChange={(open) => { if (!open) setEditingLead(null); }}
+        onSaved={fetchLeads}
+      />
     </div>
   );
 }
