@@ -1,53 +1,34 @@
 
-# Alteracoes visuais: email, logo maior e tagline editavel
 
-## Resumo
+# Corrigir ordem dos icones sociais para incluir novas redes
 
-Tres alteracoes visuais que afetam tanto o perfil publico quanto o preview na pagina de aparencia:
+## Problema
+O registro salvo no banco de dados tem `cta_order` com apenas 4 redes (`whatsapp, instagram, linkedin, website`). As 5 novas redes (`youtube, tiktok, github, twitter, pinterest`) nao aparecem na lista de reordenacao porque nao estao no array salvo.
 
-1. **Email no perfil** -- adicionar campo `email` na tabela `profiles`, exibir na secao Contato do perfil publico e no preview da aparencia
-2. **Logo maior** -- aumentar o tamanho da logo da empresa no perfil publico (de `h-7` para `h-10`) e no preview (de `h-4` para `h-6`)
-3. **Tagline editavel** -- adicionar coluna `tagline` na tabela `companies`, substituir o texto hardcoded "We connect. For real." pelo valor do banco, e adicionar campo de edicao na pagina de aparencia
+## Solucao
+Ao carregar o layout do banco, fazer um merge inteligente: manter a ordem salva das redes existentes e adicionar ao final as redes que ainda nao estao no array.
 
 ## Detalhes tecnicos
 
-### 1. Migracao SQL
+### Arquivo: `src/pages/DashboardAppearance.tsx`
 
-```sql
--- Adicionar email ao perfil
-ALTER TABLE public.profiles ADD COLUMN email text;
+No `useEffect` onde o layout e carregado (ao processar `layoutRes.data`), adicionar logica de merge:
 
--- Adicionar tagline a empresa
-ALTER TABLE public.companies ADD COLUMN tagline text DEFAULT 'We connect. For real.';
+```typescript
+// Depois de carregar layoutRes.data
+const savedOrder = layoutRes.data.cta_order || [];
+const allNetworks = defaultLayout.cta_order;
+// Manter ordem salva + adicionar novas redes ao final
+const mergedOrder = [
+  ...savedOrder,
+  ...allNetworks.filter(n => !savedOrder.includes(n))
+];
+setLayout({ ...defaultLayout, ...layoutRes.data, cta_order: mergedOrder });
 ```
 
-### 2. `src/pages/DashboardProfiles.tsx`
+Isso garante que:
+- Redes ja ordenadas pelo usuario mantem sua posicao
+- Novas redes sao adicionadas ao final da lista automaticamente
+- Nenhuma rede e duplicada
 
-- Adicionar `email` ao `emptyForm`
-- Adicionar campo de input para email no formulario de criacao/edicao de perfil
-- Incluir `email` no payload de insert/update
-
-### 3. `src/pages/PublicProfile.tsx`
-
-- Adicionar email aos `contactItems` (com icone `Mail` e link `mailto:`)
-- Aumentar logo de `h-7` para `h-10`
-- Substituir tagline hardcoded por `company.tagline`
-
-### 4. `src/pages/DashboardAppearance.tsx`
-
-- Adicionar input editavel para tagline (salvo na tabela `companies`)
-- Aumentar logo no preview de `h-4` para `h-6`
-- Adicionar email no preview da secao Contato (mostrar `p.email` se existir)
-- Substituir tagline hardcoded no preview por `company.tagline`
-
-### 5. `src/types/entities.ts`
-
-- Adicionar `email?: string` ao tipo `Profile` (se existir la)
-
-### Arquivos alterados
-
-1. Nova migracao SQL (email em profiles + tagline em companies)
-2. `src/pages/DashboardProfiles.tsx` -- campo email no formulario
-3. `src/pages/PublicProfile.tsx` -- email no contato, logo maior, tagline dinamica
-4. `src/pages/DashboardAppearance.tsx` -- input tagline, logo maior, email no preview, tagline dinamica
-5. `src/types/entities.ts` -- tipo atualizado
+Apenas 1 arquivo precisa ser alterado: `src/pages/DashboardAppearance.tsx`.
