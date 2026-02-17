@@ -7,14 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Loader2, Save, GripVertical, User, Instagram, Linkedin, Globe, Download, Send,
+  Loader2, Save, GripVertical, User, Globe, Download, Send,
   Phone, Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import LinkedInIcon from "@/components/icons/LinkedInIcon";
+import InstagramIcon from "@/components/icons/InstagramIcon";
 
 /* ── CTA / Social config ── */
-const CTA_ICONS: Record<string, any> = { whatsapp: WhatsAppIcon, instagram: Instagram, linkedin: Linkedin, website: Globe };
+const CTA_ICONS: Record<string, any> = { whatsapp: WhatsAppIcon, instagram: InstagramIcon, linkedin: LinkedInIcon, website: Globe };
 const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website" };
 
 /* ── Design tokens (matches PublicProfile) ── */

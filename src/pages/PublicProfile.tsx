@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/drawer";
 import {
   User,
-  Instagram,
-  Linkedin,
   Globe,
   Download,
   Loader2,
@@ -29,6 +27,8 @@ import {
 import { toast } from "sonner";
 import { z } from "zod";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import LinkedInIcon from "@/components/icons/LinkedInIcon";
+import InstagramIcon from "@/components/icons/InstagramIcon";
 import { motion } from "framer-motion";
 
 /* ── Helpers ── */
@@ -84,8 +84,8 @@ const fadeInUp = (delay: number) => ({ hidden: { opacity: 0, y: 12 }, visible: {
 
 /* ── Social / CTA config ── */
 const SOCIAL_ITEMS = [
-  { key: "linkedin", label: "LinkedIn", icon: Linkedin, url: (v: string) => v.startsWith("http") ? v : `https://linkedin.com/in/${v}` },
-  { key: "instagram", label: "Instagram", icon: Instagram, url: (v: string) => `https://instagram.com/${v.replace("@", "")}` },
+  { key: "linkedin", label: "LinkedIn", icon: LinkedInIcon, url: (v: string) => v.startsWith("http") ? v : `https://linkedin.com/in/${v}` },
+  { key: "instagram", label: "Instagram", icon: InstagramIcon, url: (v: string) => `https://instagram.com/${v.replace("@", "")}` },
   { key: "whatsapp", label: "WhatsApp", icon: WhatsAppIcon, url: (v: string) => `https://wa.me/${v.replace(/\D/g, "")}` },
   { key: "website", label: "Website", icon: Globe, url: (v: string) => v.startsWith("http") ? v : `https://${v}` },
 ] as const;
