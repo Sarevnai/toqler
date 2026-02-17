@@ -35,8 +35,14 @@ export default function DashboardProfiles() {
   const fetchProfiles = async () => {
     if (!companyId) return;
     setLoading(true);
-    const { data } = await supabase.from("profiles").select("*").eq("company_id", companyId).order("created_at", { ascending: false });
-    setProfiles(data ?? []);
+    try {
+      const { data, error } = await supabase.from("profiles").select("*").eq("company_id", companyId).order("created_at", { ascending: false });
+      if (error) { console.error("Profiles fetch error:", error); toast.error("Erro ao carregar perfis."); }
+      setProfiles(data ?? []);
+    } catch (err) {
+      console.error("Profiles fetch error:", err);
+      toast.error("Erro ao carregar perfis.");
+    }
     setLoading(false);
   };
 
@@ -123,7 +129,8 @@ export default function DashboardProfiles() {
   };
 
   const togglePublish = async (id: string, current: boolean) => {
-    await supabase.from("profiles").update({ published: !current }).eq("id", id);
+    const { error } = await supabase.from("profiles").update({ published: !current }).eq("id", id);
+    if (error) { console.error("Toggle publish error:", error); toast.error("Erro ao alterar publicação."); return; }
     fetchProfiles();
     toast.success(!current ? "Perfil publicado!" : "Perfil despublicado");
   };
@@ -136,7 +143,8 @@ export default function DashboardProfiles() {
       variant: "destructive",
     });
     if (!confirmed) return;
-    await supabase.from("profiles").delete().eq("id", id);
+    const { error } = await supabase.from("profiles").delete().eq("id", id);
+    if (error) { console.error("Delete profile error:", error); toast.error("Erro ao excluir perfil."); return; }
     fetchProfiles();
     toast.success("Perfil excluído");
   };

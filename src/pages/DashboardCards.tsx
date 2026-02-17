@@ -16,7 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmDialog";
 import type { NfcCardWithProfile, Profile } from "@/types/entities";
 
-const BASE_URL = "https://toqler.lovable.app/c/";
+const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin + "/c/";
 
 function slugify(text: string): string {
   return text
@@ -51,12 +51,18 @@ export default function DashboardCards() {
   const fetchData = async () => {
     if (!companyId) return;
     setLoading(true);
-    const [cardsRes, profilesRes] = await Promise.all([
-      supabase.from("nfc_cards").select("*, profiles(name)").eq("company_id", companyId).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, name").eq("company_id", companyId).order("name"),
-    ]);
-    setCards((cardsRes.data as NfcCardWithProfile[]) ?? []);
-    setProfiles(profilesRes.data ?? []);
+    try {
+      const [cardsRes, profilesRes] = await Promise.all([
+        supabase.from("nfc_cards").select("*, profiles(name)").eq("company_id", companyId).order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, name").eq("company_id", companyId).order("name"),
+      ]);
+      if (cardsRes.error) { console.error("Cards fetch error:", cardsRes.error); toast.error("Erro ao carregar cartões."); }
+      setCards((cardsRes.data as NfcCardWithProfile[]) ?? []);
+      setProfiles(profilesRes.data ?? []);
+    } catch (err) {
+      console.error("Cards fetch error:", err);
+      toast.error("Erro ao carregar cartões.");
+    }
     setLoading(false);
   };
 
@@ -138,14 +144,16 @@ export default function DashboardCards() {
   };
 
   const updateProfile = async (cardId: string, profileId: string | null) => {
-    await supabase.from("nfc_cards").update({ profile_id: profileId }).eq("id", cardId);
+    const { error } = await supabase.from("nfc_cards").update({ profile_id: profileId }).eq("id", cardId);
+    if (error) { console.error("Update profile error:", error); toast.error("Erro ao vincular perfil."); return; }
     fetchData();
     toast.success("Perfil vinculado!");
   };
 
   const toggleStatus = async (id: string, current: string) => {
     const newStatus = current === "active" ? "inactive" : "active";
-    await supabase.from("nfc_cards").update({ status: newStatus }).eq("id", id);
+    const { error } = await supabase.from("nfc_cards").update({ status: newStatus }).eq("id", id);
+    if (error) { console.error("Toggle status error:", error); toast.error("Erro ao alterar status."); return; }
     fetchData();
   };
 

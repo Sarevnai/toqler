@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { MonthlyChartPoint, CtaDistributionPoint } from "@/types/entities";
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
@@ -18,12 +19,21 @@ export default function DashboardAnalytics() {
     if (!companyId) return;
     const fetchData = async () => {
       setLoading(true);
-      const [monthlyRes, ctaRes] = await Promise.all([
-        supabase.rpc("get_monthly_chart", { _company_id: companyId }),
-        supabase.rpc("get_cta_distribution", { _company_id: companyId }),
-      ]);
-      setMonthlyData((monthlyRes.data as unknown as MonthlyChartPoint[]) ?? []);
-      setCtaData((ctaRes.data as unknown as CtaDistributionPoint[]) ?? []);
+      try {
+        const [monthlyRes, ctaRes] = await Promise.all([
+          supabase.rpc("get_monthly_chart", { _company_id: companyId }),
+          supabase.rpc("get_cta_distribution", { _company_id: companyId }),
+        ]);
+        if (monthlyRes.error || ctaRes.error) {
+          console.error("Analytics error:", monthlyRes.error, ctaRes.error);
+          toast.error("Erro ao carregar analytics.");
+        }
+        setMonthlyData((monthlyRes.data as unknown as MonthlyChartPoint[]) ?? []);
+        setCtaData((ctaRes.data as unknown as CtaDistributionPoint[]) ?? []);
+      } catch (err) {
+        console.error("Analytics fetch error:", err);
+        toast.error("Erro ao carregar analytics.");
+      }
       setLoading(false);
     };
     fetchData();

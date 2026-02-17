@@ -36,46 +36,54 @@ export default function DashboardSettings() {
   const fetchData = async () => {
     if (!companyId) return;
     setLoading(true);
-
-    const [compRes, invRes] = await Promise.all([
-      supabase.from("companies").select("*").eq("id", companyId).single(),
-      supabase.from("invitations").select("*").eq("company_id", companyId).eq("status", "pending").order("created_at", { ascending: false }),
-    ]);
-
-    if (compRes.data) {
-      setCompany(compRes.data);
-      setForm({
-        name: compRes.data.name,
-        primary_color: compRes.data.primary_color || "#0ea5e9",
-        hide_branding: compRes.data.hide_branding || false,
-        follow_up_email: compRes.data.follow_up_email || false,
-      });
-      setLogoPreview(compRes.data.logo_url || null);
-    }
-
-    setInvitations(invRes.data ?? []);
-
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/get-team-members`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ company_id: companyId }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMembers(data);
+      const [compRes, invRes] = await Promise.all([
+        supabase.from("companies").select("*").eq("id", companyId).single(),
+        supabase.from("invitations").select("*").eq("company_id", companyId).eq("status", "pending").order("created_at", { ascending: false }),
+      ]);
+
+      if (compRes.error) {
+        console.error("Settings company error:", compRes.error);
+        toast.error("Erro ao carregar configurações.");
+      }
+
+      if (compRes.data) {
+        setCompany(compRes.data);
+        setForm({
+          name: compRes.data.name,
+          primary_color: compRes.data.primary_color || "#0ea5e9",
+          hide_branding: compRes.data.hide_branding || false,
+          follow_up_email: compRes.data.follow_up_email || false,
+        });
+        setLogoPreview(compRes.data.logo_url || null);
+      }
+
+      setInvitations(invRes.data ?? []);
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/get-team-members`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ company_id: companyId }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMembers(data);
+        }
+      } catch (err) {
+        console.error("Error fetching members:", err);
+        const { data } = await supabase.from("company_memberships").select("*").eq("company_id", companyId);
+        setMembers(data ?? []);
       }
     } catch (err) {
-      console.error("Error fetching members:", err);
-      const { data } = await supabase.from("company_memberships").select("*").eq("company_id", companyId);
-      setMembers(data ?? []);
+      console.error("Settings fetch error:", err);
+      toast.error("Erro ao carregar configurações.");
     }
-
     setLoading(false);
   };
 

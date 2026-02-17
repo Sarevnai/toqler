@@ -86,70 +86,84 @@ export default function DashboardAppearance() {
 
   useEffect(() => {
     if (!companyId) return;
-    const fetch = async () => {
+    const fetchLayout = async () => {
       setLoading(true);
-      const [layoutRes, companyRes, profilesRes] = await Promise.all([
-        supabase.from("profile_layouts").select("*").eq("company_id", companyId).maybeSingle(),
-        supabase.from("companies").select("*").eq("id", companyId).single(),
-        supabase.from("profiles").select("*").eq("company_id", companyId).limit(5),
-      ]);
-      if (layoutRes.data) {
-        const savedOrder = (layoutRes.data.cta_order as string[]) || [];
-        const allNetworks = defaultLayout.cta_order;
-        const mergedOrder = [
-          ...savedOrder,
-          ...allNetworks.filter(n => !savedOrder.includes(n))
-        ];
-        setLayout({ ...defaultLayout, ...layoutRes.data, cta_order: mergedOrder });
-        setLayoutId(layoutRes.data.id);
+      try {
+        const [layoutRes, companyRes, profilesRes] = await Promise.all([
+          supabase.from("profile_layouts").select("*").eq("company_id", companyId).maybeSingle(),
+          supabase.from("companies").select("*").eq("id", companyId).single(),
+          supabase.from("profiles").select("*").eq("company_id", companyId).limit(5),
+        ]);
+        if (layoutRes.error || companyRes.error) {
+          console.error("Appearance load error:", layoutRes.error, companyRes.error);
+          toast.error("Erro ao carregar aparência.");
+        }
+        if (layoutRes.data) {
+          const savedOrder = (layoutRes.data.cta_order as string[]) || [];
+          const allNetworks = defaultLayout.cta_order;
+          const mergedOrder = [
+            ...savedOrder,
+            ...allNetworks.filter(n => !savedOrder.includes(n))
+          ];
+          setLayout({ ...defaultLayout, ...layoutRes.data, cta_order: mergedOrder });
+          setLayoutId(layoutRes.data.id);
+        }
+        setCompany(companyRes.data);
+        setProfiles(profilesRes.data ?? []);
+        if (profilesRes.data?.[0]) setPreviewProfile(profilesRes.data[0]);
+      } catch (err) {
+        console.error("Appearance fetch error:", err);
+        toast.error("Erro ao carregar aparência.");
       }
-      setCompany(companyRes.data);
-      setProfiles(profilesRes.data ?? []);
-      if (profilesRes.data?.[0]) setPreviewProfile(profilesRes.data[0]);
       setLoading(false);
     };
-    fetch();
+    fetchLayout();
   }, [companyId]);
 
   const handleSave = async () => {
     if (!companyId) return;
     setSaving(true);
-    const payload = {
-      company_id: companyId,
-      layout_style: layout.layout_style,
-      button_style: layout.button_style,
-      font_style: layout.font_style,
-      background_style: layout.background_style,
-      show_company_header: layout.show_company_header,
-      show_save_contact: layout.show_save_contact,
-      show_lead_form: layout.show_lead_form,
-      show_stats_row: layout.show_stats_row,
-      show_bio: layout.show_bio,
-      show_contact: layout.show_contact,
-      show_social: layout.show_social,
-      show_video: layout.show_video,
-      cta_order: layout.cta_order,
-      accent_color: layout.accent_color,
-      bg_color: layout.bg_color,
-      card_color: layout.card_color,
-      text_color: layout.text_color,
-      font_family: layout.font_family,
-    };
+    try {
+      const payload = {
+        company_id: companyId,
+        layout_style: layout.layout_style,
+        button_style: layout.button_style,
+        font_style: layout.font_style,
+        background_style: layout.background_style,
+        show_company_header: layout.show_company_header,
+        show_save_contact: layout.show_save_contact,
+        show_lead_form: layout.show_lead_form,
+        show_stats_row: layout.show_stats_row,
+        show_bio: layout.show_bio,
+        show_contact: layout.show_contact,
+        show_social: layout.show_social,
+        show_video: layout.show_video,
+        cta_order: layout.cta_order,
+        accent_color: layout.accent_color,
+        bg_color: layout.bg_color,
+        card_color: layout.card_color,
+        text_color: layout.text_color,
+        font_family: layout.font_family,
+      };
 
-    if (company) {
-      await supabase.from("companies").update({ tagline: company.tagline }).eq("id", companyId);
-    }
+      if (company) {
+        await supabase.from("companies").update({ tagline: company.tagline }).eq("id", companyId);
+      }
 
-    if (layoutId) {
-      const { error } = await supabase.from("profile_layouts").update(payload).eq("id", layoutId);
-      if (error) { toast.error("Erro ao salvar"); setSaving(false); return; }
-    } else {
-      const { data, error } = await supabase.from("profile_layouts").insert(payload).select("id").single();
-      if (error) { toast.error("Erro ao salvar"); setSaving(false); return; }
-      setLayoutId(data.id);
+      if (layoutId) {
+        const { error } = await supabase.from("profile_layouts").update(payload).eq("id", layoutId);
+        if (error) { toast.error("Erro ao salvar aparência"); setSaving(false); return; }
+      } else {
+        const { data, error } = await supabase.from("profile_layouts").insert(payload).select("id").single();
+        if (error) { toast.error("Erro ao salvar aparência"); setSaving(false); return; }
+        setLayoutId(data.id);
+      }
+      toast.success("Aparência salva!");
+    } catch (err) {
+      console.error("Appearance save error:", err);
+      toast.error("Erro ao salvar aparência.");
     }
     setSaving(false);
-    toast.success("Aparência salva!");
   };
 
   const moveCTA = (index: number, direction: "up" | "down") => {
