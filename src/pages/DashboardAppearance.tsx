@@ -109,6 +109,11 @@ export default function DashboardAppearance() {
       cta_order: layout.cta_order,
     };
 
+    // Save tagline to companies table
+    if (company) {
+      await supabase.from("companies").update({ tagline: company.tagline }).eq("id", companyId);
+    }
+
     if (layoutId) {
       const { error } = await supabase.from("profile_layouts").update(payload).eq("id", layoutId);
       if (error) { toast.error("Erro ao salvar"); setSaving(false); return; }
@@ -144,6 +149,22 @@ export default function DashboardAppearance() {
       <div className="grid lg:grid-cols-[1fr_380px] gap-6">
         {/* ── Editor controls ── */}
         <div className="space-y-4">
+          {/* Tagline */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Tagline</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>Texto da tagline</Label>
+                <input
+                  className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={company?.tagline || ""}
+                  onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
+                  placeholder="We connect. For real."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Section toggles */}
           <Card>
             <CardHeader><CardTitle className="text-base">Seções visíveis</CardTitle></CardHeader>
@@ -222,8 +243,8 @@ export default function DashboardAppearance() {
                   {/* Brand row */}
                   {layout.show_company_header && company && (
                     <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-4 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
-                      <span className="text-[8px] italic" style={{ color: T.text2 }}>We connect. For real.</span>
+                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-6 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
+                      {company.tagline && <span className="text-[8px] italic" style={{ color: T.text2 }}>{company.tagline}</span>}
                     </div>
                   )}
 
@@ -253,12 +274,22 @@ export default function DashboardAppearance() {
                   )}
 
                   {/* Contact */}
-                  {layout.show_contact && p?.whatsapp && (
+                  {layout.show_contact && (p?.whatsapp || p?.email) && (
                     <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Contato</p>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Phone className="w-3 h-3" style={{ color: T.text1 }} /></div>
-                        <span className="text-[8px]" style={{ color: T.text2 }}>{p.whatsapp}</span>
+                      <div className="flex flex-col gap-1.5">
+                        {p?.whatsapp && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Phone className="w-3 h-3" style={{ color: T.text1 }} /></div>
+                            <span className="text-[8px]" style={{ color: T.text2 }}>{p.whatsapp}</span>
+                          </div>
+                        )}
+                        {p?.email && (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Mail className="w-3 h-3" style={{ color: T.text1 }} /></div>
+                            <span className="text-[8px]" style={{ color: T.text2 }}>{p.email}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
