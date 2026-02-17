@@ -304,7 +304,7 @@ export default function DashboardAppearance() {
                 </div>
 
                 {/* Card body */}
-                <div className="relative z-10 -mt-4 rounded-t-xl pt-5 pb-3 px-[18px] py-[34px] mb-[36px]" style={{ background: T.card }}>
+                <div className="relative z-10 -mt-4 rounded-xl pt-5 pb-3 px-[18px] py-[34px] mb-[36px]" style={{ background: T.card }}>
                   <h2 className="font-display text-xl font-semibold leading-tight" style={{ color: T.text1 }}>{p?.name || "Nome do perfil"}</h2>
                   {p?.role_title &&
                   <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.text2 }}>
