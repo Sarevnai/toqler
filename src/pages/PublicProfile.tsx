@@ -180,6 +180,10 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
   const showSaveContact = layout?.show_save_contact !== false;
   const showLeadForm = layout?.show_lead_form !== false;
   const showCompanyHeader = layout?.show_company_header !== false;
+  const showBio = layout?.show_bio !== false;
+  const showContact = layout?.show_contact !== false;
+  const showSocial = layout?.show_social !== false;
+  const showVideo = layout?.show_video !== false;
   const hideBranding = company?.hide_branding;
 
   const availableSocials = SOCIAL_ITEMS.filter((s) => profile[s.key]);
@@ -329,7 +333,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
         <div className="px-6 pb-10" style={{ background: T.bg }}>
 
           {/* Bio */}
-          {profile.bio && (
+          {showBio && profile.bio && (
             <motion.div className="rounded-xl p-6 mt-3 shadow-sm" style={{ background: T.card }} variants={fadeInUp(0.6)} initial="hidden" animate="visible">
               <h2 className="text-[0.95rem] font-bold mb-3" style={{ color: T.text1 }}>Minha Bio</h2>
               <p className="text-[0.875rem] leading-relaxed" style={{ color: T.text2 }}>{profile.bio}</p>
@@ -337,7 +341,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
           )}
 
           {/* Contact */}
-          {contactItems.length > 0 && (
+          {showContact && contactItems.length > 0 && (
             <motion.div className="rounded-xl p-6 mt-3 shadow-sm" style={{ background: T.card }} variants={fadeInUp(0.7)} initial="hidden" animate="visible">
               <h2 className="text-[0.95rem] font-bold mb-3" style={{ color: T.text1 }}>Contato</h2>
               <div className="flex flex-col gap-3.5">
@@ -357,7 +361,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
           )}
 
           {/* Social */}
-          {availableSocials.length > 0 && (
+          {showSocial && availableSocials.length > 0 && (
             <motion.div className="rounded-xl p-6 mt-3 shadow-sm" style={{ background: T.card }} variants={fadeInUp(0.8)} initial="hidden" animate="visible">
               <h2 className="text-[0.95rem] font-bold mb-3" style={{ color: T.text1 }}>Social</h2>
               <div className="grid grid-cols-4 gap-3">
@@ -380,7 +384,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
           )}
 
           {/* Video */}
-          {profile.video_url && (() => {
+          {showVideo && profile.video_url && (() => {
             const embedUrl = getSafeVideoEmbedUrl(profile.video_url);
             if (!embedUrl) return null;
             return (

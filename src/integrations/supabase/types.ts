@@ -344,10 +344,14 @@ export type Database = {
           font_style: string
           id: string
           layout_style: string
+          show_bio: boolean
           show_company_header: boolean
+          show_contact: boolean
           show_lead_form: boolean
           show_save_contact: boolean
+          show_social: boolean
           show_stats_row: boolean
+          show_video: boolean
           updated_at: string
         }
         Insert: {
@@ -359,10 +363,14 @@ export type Database = {
           font_style?: string
           id?: string
           layout_style?: string
+          show_bio?: boolean
           show_company_header?: boolean
+          show_contact?: boolean
           show_lead_form?: boolean
           show_save_contact?: boolean
+          show_social?: boolean
           show_stats_row?: boolean
+          show_video?: boolean
           updated_at?: string
         }
         Update: {
@@ -374,10 +382,14 @@ export type Database = {
           font_style?: string
           id?: string
           layout_style?: string
+          show_bio?: boolean
           show_company_header?: boolean
+          show_contact?: boolean
           show_lead_form?: boolean
           show_save_contact?: boolean
+          show_social?: boolean
           show_stats_row?: boolean
+          show_video?: boolean
           updated_at?: string
         }
         Relationships: [
