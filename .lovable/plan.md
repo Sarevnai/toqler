@@ -1,35 +1,57 @@
 
-
-## Gradiente de fundo infinito na foto do perfil
+## Sistema de Enquadramento de Foto do Perfil
 
 ### Problema
-Atualmente o gradiente usa uma unica camada com opacidade de 70%, o que permite que as cores da foto vazem e criem uma divisao visivel quando ha contraste entre a foto e a cor de fundo.
+Hoje a foto do perfil usa `object-cover` com posicao fixa `object-[center_20%]`. Se o usuario sobe uma foto onde o rosto esta em outra posicao, o resultado fica ruim e nao ha como ajustar.
 
 ### Solucao
-Substituir o gradiente unico por duas camadas sobrepostas que garantem uma transicao suave independentemente da combinacao de cores:
+Adicionar um controle de enquadramento (pan/drag) no editor de perfil que permite ao usuario reposicionar a foto dentro do frame. Simples, visual e intuitivo.
 
-1. **Camada inferior (mais alta, mais suave)**: cobre 60% da altura da foto, vai de `T.bg` solido ate transparente -- cria a base da transicao
-2. **Camada superior (mais curta, mais forte)**: cobre 35% da altura da foto, vai de `T.bg` solido ate transparente -- garante que a borda inferior seja completamente coberta pela cor de fundo
+### Como vai funcionar
 
-Ambas com opacidade total (sem `opacity: 0.7`), pois a transparencia ja e controlada pelo proprio gradiente CSS. O efeito combinado cria um fade progressivo que funciona com qualquer foto e qualquer cor de fundo.
+1. **No editor de perfil (DashboardProfiles)**: Ao selecionar uma foto, o usuario ve um preview do frame (aspect ratio 4/3.2) e pode arrastar a imagem para posicionar o rosto onde quiser
+2. **Dica educativa**: Um texto sutil orienta o usuario sobre o melhor tipo de foto (vertical, boa iluminacao, rosto visivel)
+3. **Posicao salva no banco**: Dois campos novos `photo_offset_x` e `photo_offset_y` (0-100, representando a porcentagem do `object-position`)
+4. **Perfil publico e preview**: Usam os valores salvos em vez do fixo `center 20%`
 
-### Arquivos alterados
+### Detalhes tecnicos
 
-1. **`src/pages/PublicProfile.tsx`** (linha 225): Substituir a div unica do gradiente por duas divs sobrepostas
-2. **`src/pages/DashboardAppearance.tsx`** (linha 303): Mesma alteracao no preview do dashboard
+**1. Migracao no banco de dados**
 
-### Detalhe tecnico
+Adicionar duas colunas na tabela `profiles`:
+- `photo_offset_x` (integer, default 50) -- posicao horizontal em %
+- `photo_offset_y` (integer, default 30) -- posicao vertical em % (30% como padrao pois rostos costumam estar no terco superior)
 
-Codigo do gradiente (aplicado nos dois arquivos):
+**2. Componente PhotoFrameEditor (novo)**
 
-```text
-Antes (1 camada):
-div h-[40%] opacity-0.7 | linear-gradient(to top, T.bg 0%, transparent 100%)
+Arquivo: `src/components/dashboard/PhotoFrameEditor.tsx`
 
-Depois (2 camadas):
-div h-[60%] | linear-gradient(to top, T.bg 0%, transparent 100%)
-div h-[35%] | linear-gradient(to top, T.bg 20%, transparent 100%)
-```
+- Exibe a foto dentro de um container com aspect ratio 4/3.2 (mesmo do perfil publico)
+- Permite arrastar (mousedown/mousemove/touchstart/touchmove) para reposicionar
+- Mostra um indicador visual de "arraste para ajustar"
+- Retorna os valores `offsetX` e `offsetY` via callback
 
-A primeira camada faz a transicao ampla e suave. A segunda camada reforça a parte mais proxima da borda inferior, eliminando qualquer vestígio da foto na juncao com o fundo.
+**3. Alteracoes em DashboardProfiles.tsx**
 
+- Substituir o preview circular simples pelo `PhotoFrameEditor` quando ha foto selecionada
+- Adicionar `photo_offset_x` e `photo_offset_y` ao form state
+- Salvar os offsets junto com os outros dados do perfil
+- Adicionar dica educativa: "Use uma foto vertical com boa iluminacao e rosto visivel para melhor resultado"
+
+**4. Alteracoes em PublicProfile.tsx**
+
+- Ler `photo_offset_x` e `photo_offset_y` do perfil
+- Aplicar como `object-position: {x}% {y}%` na tag img (substituindo o fixo `center_20%`)
+
+**5. Alteracoes em DashboardAppearance.tsx**
+
+- Mesma logica: usar os offsets salvos no preview da aparencia
+
+### Experiencia do usuario
+
+1. Usuario clica "Adicionar foto" no editor de perfil
+2. Seleciona a imagem
+3. Ve um preview realista do frame com a dica "Arraste para ajustar o enquadramento"
+4. Arrasta a foto ate o rosto ficar bem posicionado
+5. Salva o perfil -- posicao fica guardada
+6. Perfil publico exibe a foto na posicao escolhida
