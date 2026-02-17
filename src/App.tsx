@@ -25,10 +25,6 @@ const CardRedirect = lazy(() => import("./pages/CardRedirect"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ProtectedRoute = lazy(() => import("./components/auth/ProtectedRoute"));
 const PublicOnlyRoute = lazy(() => import("./components/auth/PublicOnlyRoute"));
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
-const AdminCustomerDetail = lazy(() => import("./pages/admin/AdminCustomerDetail"));
 
 const queryClient = new QueryClient();
 
@@ -62,11 +58,6 @@ const App = () => (
                   <Route path="appearance" element={<DashboardAppearance />} />
                   <Route path="integrations" element={<DashboardIntegrations />} />
                   <Route path="settings" element={<DashboardSettings />} />
-                </Route>
-                <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="customers" element={<AdminCustomers />} />
-                  <Route path="customers/:companyId" element={<AdminCustomerDetail />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

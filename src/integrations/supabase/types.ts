@@ -14,80 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string | null
-          display_name: string | null
-          id: string
-          is_active: boolean | null
-          role: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          display_name?: string | null
-          id?: string
-          is_active?: boolean | null
-          role?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          display_name?: string | null
-          id?: string
-          is_active?: boolean | null
-          role?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      audit_logs: {
-        Row: {
-          action: string
-          admin_user_id: string | null
-          created_at: string | null
-          entity_id: string | null
-          entity_type: string | null
-          id: string
-          ip_address: string | null
-          new_data: Json | null
-          old_data: Json | null
-        }
-        Insert: {
-          action: string
-          admin_user_id?: string | null
-          created_at?: string | null
-          entity_id?: string | null
-          entity_type?: string | null
-          id?: string
-          ip_address?: string | null
-          new_data?: Json | null
-          old_data?: Json | null
-        }
-        Update: {
-          action?: string
-          admin_user_id?: string | null
-          created_at?: string | null
-          entity_id?: string | null
-          entity_type?: string | null
-          id?: string
-          ip_address?: string | null
-          new_data?: Json | null
-          old_data?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_admin_user_id_fkey"
-            columns: ["admin_user_id"]
-            isOneToOne: false
-            referencedRelation: "admin_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       companies: {
         Row: {
           created_at: string
@@ -411,36 +337,6 @@ export type Database = {
           },
         ]
       }
-      platform_notifications: {
-        Row: {
-          body: string | null
-          created_at: string | null
-          id: string
-          is_read: boolean | null
-          metadata: Json | null
-          title: string
-          type: string
-        }
-        Insert: {
-          body?: string | null
-          created_at?: string | null
-          id?: string
-          is_read?: boolean | null
-          metadata?: Json | null
-          title: string
-          type: string
-        }
-        Update: {
-          body?: string | null
-          created_at?: string | null
-          id?: string
-          is_read?: boolean | null
-          metadata?: Json | null
-          title?: string
-          type?: string
-        }
-        Relationships: []
-      }
       profile_layouts: {
         Row: {
           accent_color: string
@@ -620,13 +516,6 @@ export type Database = {
         Args: { _name: string }
         Returns: string
       }
-      get_admin_companies: {
-        Args: { _limit?: number; _offset?: number; _search?: string }
-        Returns: Json
-      }
-      get_admin_company_detail: { Args: { _company_id: string }; Returns: Json }
-      get_admin_growth_chart: { Args: never; Returns: Json }
-      get_admin_kpis: { Args: never; Returns: Json }
       get_cta_distribution: { Args: { _company_id: string }; Returns: Json }
       get_daily_chart: { Args: { _company_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _company_id: string }; Returns: Json }
@@ -642,8 +531,6 @@ export type Database = {
       }
       is_company_admin: { Args: { _company_id: string }; Returns: boolean }
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
-      is_platform_admin: { Args: never; Returns: boolean }
-      is_platform_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       membership_role: "admin" | "member"
