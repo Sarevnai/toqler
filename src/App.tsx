@@ -29,6 +29,8 @@ const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
 const AdminCustomerDetail = lazy(() => import("./pages/admin/AdminCustomerDetail"));
+const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const App = () => (
                   <Route index element={<AdminDashboard />} />
                   <Route path="customers" element={<AdminCustomers />} />
                   <Route path="customers/:companyId" element={<AdminCustomerDetail />} />
+                  <Route path="notifications" element={<AdminNotifications />} />
+                  <Route path="settings" element={<AdminSettings />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
