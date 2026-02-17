@@ -1,32 +1,33 @@
 
+# Corrigir logo e tagline no perfil publico
 
-# Substituir icones do LinkedIn e Instagram pelos logos oficiais
+## Problema
 
-## Resumo
+A tabela `companies` nao tem uma politica RLS publica de leitura. Quando um visitante (nao autenticado) acessa o perfil publico, a query `supabase.from("companies").select("*").eq("id", p.company_id)` retorna `null` porque o RLS bloqueia o acesso. Por isso, o logo da empresa e a tagline nao aparecem no perfil publico, mesmo estando configurados.
 
-Criar componentes SVG para LinkedIn e Instagram (assim como foi feito para o WhatsApp) e substituir os icones Lucide genéricos em todos os locais: `PublicProfile.tsx` e `DashboardAppearance.tsx`.
+## Solucao
+
+Adicionar uma politica RLS na tabela `companies` que permita leitura publica quando a empresa tem pelo menos um perfil publicado. Isso garante que visitantes vejam o logo e tagline no perfil publico, sem expor empresas que nao tem perfis publicados.
 
 ## Detalhes tecnicos
 
-### 1. Criar `src/components/icons/LinkedInIcon.tsx`
-Componente SVG inline com o logo oficial do LinkedIn (letra "in" no retangulo arredondado). Aceita `className` e `style` como props, igual ao `WhatsAppIcon`.
+### Migracao SQL
 
-### 2. Criar `src/components/icons/InstagramIcon.tsx`
-Componente SVG inline com o logo oficial do Instagram (camera estilizada com gradiente). Como SVG inline nao suporta gradientes de forma simples com `currentColor`, o componente usara o path monocromatico do logo oficial (contorno da camera + circulo + ponto) preenchido com `currentColor`, mantendo compatibilidade com o sistema de cores existente.
-
-### 3. Atualizar `src/pages/PublicProfile.tsx`
-- Importar `LinkedInIcon` e `InstagramIcon`
-- Substituir `Linkedin` e `Instagram` (lucide) no array `SOCIAL_ITEMS`
-- Remover imports nao utilizados de lucide
-
-### 4. Atualizar `src/pages/DashboardAppearance.tsx`
-- Importar `LinkedInIcon` e `InstagramIcon`
-- Substituir no mapa `CTA_ICONS`
-- Remover imports nao utilizados de lucide
+```sql
+CREATE POLICY "Public can view companies with published profiles"
+  ON public.companies
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.company_id = companies.id
+        AND profiles.published = true
+    )
+  );
+```
 
 ### Arquivos alterados
-1. `src/components/icons/LinkedInIcon.tsx` — novo
-2. `src/components/icons/InstagramIcon.tsx` — novo
-3. `src/pages/PublicProfile.tsx` — trocar icones
-4. `src/pages/DashboardAppearance.tsx` — trocar icones
 
+1. **Nova migracao SQL** — adicionar politica RLS publica na tabela `companies`
+
+Nenhuma alteracao de codigo e necessaria. O `PublicProfile.tsx` ja faz a query corretamente (linha 115) e ja renderiza o logo e tagline (linhas 221-226). O problema e exclusivamente de permissao no banco de dados.
