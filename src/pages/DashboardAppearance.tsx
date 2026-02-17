@@ -6,44 +6,53 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, GripVertical, User, MessageCircle, Instagram, Linkedin, Globe, Download } from "lucide-react";
+import {
+  Loader2, Save, GripVertical, User, MessageCircle, Instagram, Linkedin, Globe, Download, Send,
+  Phone, Mail,
+} from "lucide-react";
 import { toast } from "sonner";
 
+/* ── CTA / Social config ── */
 const CTA_ICONS: Record<string, any> = { whatsapp: MessageCircle, instagram: Instagram, linkedin: Linkedin, website: Globe };
 const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website" };
-const CTA_COLORS: Record<string, string> = { whatsapp: "bg-green-500", instagram: "bg-pink-500", linkedin: "bg-blue-600", website: "bg-primary" };
 
-const LAYOUT_OPTIONS = [
-  { value: "card", label: "Card" },
-  { value: "minimal", label: "Minimalista" },
-  { value: "bold", label: "Destaque" },
-];
-const BUTTON_OPTIONS = [
-  { value: "rounded", label: "Arredondado" },
-  { value: "square", label: "Quadrado" },
-  { value: "pill", label: "Pílula" },
-];
-const FONT_OPTIONS = [
-  { value: "default", label: "Padrão" },
-  { value: "serif", label: "Serifada" },
-  { value: "mono", label: "Monoespaçada" },
-];
-const BG_OPTIONS = [
-  { value: "solid", label: "Sólido" },
-  { value: "gradient", label: "Gradiente" },
-  { value: "mesh", label: "Mesh" },
+/* ── Design tokens (matches PublicProfile) ── */
+const T = {
+  bg: "#f5f4f0",
+  card: "#ffffff",
+  accent: "#D4E84B",
+  text1: "#1a1a1a",
+  text2: "#6b6b6b",
+  text3: "#999999",
+  border: "#e8e8e5",
+} as const;
+
+/* ── Section toggle definitions ── */
+const SECTION_TOGGLES: [string, string][] = [
+  ["show_company_header", "Cabeçalho da empresa"],
+  ["show_save_contact", "Botão Salvar Contato"],
+  ["show_lead_form", "Botão Trocar Contato"],
+  ["show_bio", "Seção Bio"],
+  ["show_contact", "Seção Contato"],
+  ["show_social", "Seção Social"],
+  ["show_video", "Seção Vídeo"],
 ];
 
 const defaultLayout = {
+  show_company_header: true,
+  show_save_contact: true,
+  show_lead_form: true,
+  show_bio: true,
+  show_contact: true,
+  show_social: true,
+  show_video: true,
+  cta_order: ["whatsapp", "instagram", "linkedin", "website"],
+  // Keep legacy fields for DB compat
   layout_style: "card",
   button_style: "rounded",
   font_style: "default",
   background_style: "solid",
-  show_company_header: true,
-  show_save_contact: true,
-  show_lead_form: true,
   show_stats_row: true,
-  cta_order: ["whatsapp", "instagram", "linkedin", "website"],
 };
 
 export default function DashboardAppearance() {
@@ -90,6 +99,10 @@ export default function DashboardAppearance() {
       show_save_contact: layout.show_save_contact,
       show_lead_form: layout.show_lead_form,
       show_stats_row: layout.show_stats_row,
+      show_bio: layout.show_bio,
+      show_contact: layout.show_contact,
+      show_social: layout.show_social,
+      show_video: layout.show_video,
       cta_order: layout.cta_order,
     };
 
@@ -115,15 +128,6 @@ export default function DashboardAppearance() {
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
-  const primaryColor = company?.primary_color || "#0ea5e9";
-  const fontClass = layout.font_style === "serif" ? "font-serif" : layout.font_style === "mono" ? "font-mono" : "font-sans";
-  const btnRadius = layout.button_style === "pill" ? "rounded-full" : layout.button_style === "square" ? "rounded-none" : "rounded-xl";
-  const bgStyle = layout.background_style === "gradient"
-    ? { background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)` }
-    : layout.background_style === "mesh"
-      ? { background: `radial-gradient(circle at 20% 50%, ${primaryColor}10, transparent 50%), radial-gradient(circle at 80% 50%, ${primaryColor}08, transparent 50%)` }
-      : {};
-
   const ctaOrder = layout.cta_order as string[];
   const p = previewProfile;
 
@@ -135,53 +139,13 @@ export default function DashboardAppearance() {
       </div>
 
       <div className="grid lg:grid-cols-[1fr_380px] gap-6">
-        {/* Editor controls */}
+        {/* ── Editor controls ── */}
         <div className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Estilo</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Layout</Label>
-                  <Select value={layout.layout_style} onValueChange={(v) => setLayout({ ...layout, layout_style: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{LAYOUT_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Botões</Label>
-                  <Select value={layout.button_style} onValueChange={(v) => setLayout({ ...layout, button_style: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{BUTTON_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Fonte</Label>
-                  <Select value={layout.font_style} onValueChange={(v) => setLayout({ ...layout, font_style: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{FONT_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Fundo</Label>
-                  <Select value={layout.background_style} onValueChange={(v) => setLayout({ ...layout, background_style: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{BG_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Section toggles */}
           <Card>
             <CardHeader><CardTitle className="text-base">Seções visíveis</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {([
-                ["show_company_header", "Cabeçalho da empresa"],
-                ["show_save_contact", "Botão Salvar Contato"],
-                ["show_lead_form", "Formulário de lead"],
-                ["show_stats_row", "Estatísticas"],
-              ] as [string, string][]).map(([key, label]) => (
+              {SECTION_TOGGLES.map(([key, label]) => (
                 <div key={key} className="flex items-center justify-between">
                   <Label>{label}</Label>
                   <Switch checked={layout[key]} onCheckedChange={(v) => setLayout({ ...layout, [key]: v })} />
@@ -190,8 +154,9 @@ export default function DashboardAppearance() {
             </CardContent>
           </Card>
 
+          {/* CTA order */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Ordem dos CTAs</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Ordem dos ícones sociais</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {ctaOrder.map((cta, i) => {
                 const Icon = CTA_ICONS[cta] || Globe;
@@ -216,7 +181,7 @@ export default function DashboardAppearance() {
           </Button>
         </div>
 
-        {/* Live preview */}
+        {/* ── Live preview (miniature of new card) ── */}
         <div className="lg:sticky lg:top-6 h-fit">
           <Card>
             <CardHeader className="pb-2">
@@ -231,82 +196,102 @@ export default function DashboardAppearance() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div
-                className={`${fontClass} p-4 space-y-4 rounded-b-lg min-h-[500px]`}
-                style={bgStyle}
-              >
-                {/* Company header */}
-                {layout.show_company_header && company && (
-                  <div className="text-center">
-                    {company.logo_url && <img src={company.logo_url} alt="" className="h-6 mx-auto mb-1" />}
-                    <p className="text-[10px] text-muted-foreground">{company.name}</p>
-                  </div>
-                )}
-
-                {/* Photo */}
-                <div className={`aspect-[4/5] ${btnRadius} overflow-hidden bg-muted`}>
+              <div className="rounded-b-lg overflow-hidden" style={{ background: T.bg }}>
+                {/* Hero */}
+                <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
                   {p?.photo_url ? (
-                    <img src={p.photo_url} alt="" className="w-full h-full object-cover" />
+                    <img src={p.photo_url} alt="" className="w-full h-full object-cover object-[center_20%]" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center"><User className="h-12 w-12 text-muted-foreground" /></div>
+                    <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 100%)" }} />
+                </div>
+
+                {/* Card body */}
+                <div className="relative z-10 -mt-4 rounded-t-xl px-4 pt-5 pb-3" style={{ background: T.card }}>
+                  <h2 className="font-display text-xl font-semibold leading-tight" style={{ color: T.text1 }}>{p?.name || "Nome do perfil"}</h2>
+                  {p?.role_title && (
+                    <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.text2 }}>
+                      {p.role_title}{company ? ` at ${company.name}` : ""}
+                    </p>
+                  )}
+
+                  {/* Brand row */}
+                  {layout.show_company_header && company && (
+                    <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-4 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
+                      <span className="text-[8px] italic" style={{ color: T.text2 }}>We connect. For real.</span>
+                    </div>
+                  )}
+
+                  {/* CTAs */}
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    {layout.show_save_contact && (
+                      <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.border}`, color: T.text1 }}>
+                        <Download className="w-3 h-3" /> Salvar
+                      </div>
+                    )}
+                    {layout.show_lead_form && (
+                      <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ background: T.accent, color: T.text1 }}>
+                        <Send className="w-3 h-3" /> Trocar
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sections */}
+                <div className="px-3 pb-4 space-y-2" style={{ background: T.bg }}>
+                  {/* Bio */}
+                  {layout.show_bio && p?.bio && (
+                    <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
+                      <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Minha Bio</p>
+                      <p className="text-[8px] leading-relaxed line-clamp-2" style={{ color: T.text2 }}>{p.bio}</p>
+                    </div>
+                  )}
+
+                  {/* Contact */}
+                  {layout.show_contact && p?.whatsapp && (
+                    <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
+                      <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Contato</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Phone className="w-3 h-3" style={{ color: T.text1 }} /></div>
+                        <span className="text-[8px]" style={{ color: T.text2 }}>{p.whatsapp}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Social */}
+                  {layout.show_social && (
+                    <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
+                      <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Social</p>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {ctaOrder.map((key) => {
+                          const Icon = CTA_ICONS[key] || Globe;
+                          return (
+                            <div key={key} className="flex flex-col items-center gap-1 py-2 rounded" style={{ background: T.bg }}>
+                              <Icon className="w-3.5 h-3.5" style={{ color: T.text1 }} />
+                              <span className="text-[6px] uppercase tracking-wider" style={{ color: T.text2 }}>{CTA_LABELS[key]}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Video */}
+                  {layout.show_video && p?.video_url && (
+                    <div className="rounded-lg overflow-hidden shadow-sm" style={{ background: T.card }}>
+                      <div className="w-full aspect-video bg-muted flex items-center justify-center">
+                        <span className="text-[9px]" style={{ color: T.text3 }}>▶ Vídeo</span>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {/* Name */}
-                <div>
-                  <h2 className="text-lg font-bold text-foreground">{p?.name || "Nome do perfil"}</h2>
-                  {p?.role_title && <p className="text-xs text-muted-foreground">{p.role_title}</p>}
-                  {p?.bio && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.bio}</p>}
-                </div>
-
-                {/* Save contact */}
-                {layout.show_save_contact && (
-                  <div
-                    className={`w-full py-2.5 text-center text-sm font-medium text-primary-foreground ${btnRadius}`}
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    <Download className="inline h-3.5 w-3.5 mr-1.5" />Salvar Contato
-                  </div>
-                )}
-
-                {/* CTAs */}
-                <div className="space-y-2">
-                  {ctaOrder.map((type) => {
-                    const Icon = CTA_ICONS[type] || Globe;
-                    return (
-                      <div key={type} className={`flex items-center gap-3 p-3 ${btnRadius} border border-border`}>
-                        <div className={`flex h-8 w-8 items-center justify-center rounded-full text-primary-foreground ${CTA_COLORS[type]}`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <span className="text-sm font-medium">{CTA_LABELS[type]}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Lead form */}
-                {layout.show_lead_form && (
-                  <div className={`border border-border ${btnRadius} p-4 space-y-2`}>
-                    <p className="text-sm font-semibold">Deixe seu contato</p>
-                    <div className="space-y-1.5">
-                      <div className="h-8 bg-muted rounded" />
-                      <div className="h-8 bg-muted rounded" />
-                      <div
-                        className={`h-8 text-center text-xs text-primary-foreground flex items-center justify-center ${btnRadius}`}
-                        style={{ backgroundColor: primaryColor }}
-                      >
-                        Enviar
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Branding */}
+                {/* Footer */}
                 {!company?.hide_branding && (
-                  <div className="text-center pt-2">
-                    <span className="text-[10px] text-muted-foreground/50 inline-flex items-center gap-1">
-                      Powered by Toqler
-                    </span>
+                  <div className="text-center py-3" style={{ background: T.bg }}>
+                    <span className="text-[7px] uppercase tracking-wider" style={{ color: T.text3 }}>Powered by Toqler</span>
                   </div>
                 )}
               </div>
