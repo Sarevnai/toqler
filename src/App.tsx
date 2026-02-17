@@ -20,6 +20,7 @@ const DashboardAnalytics = lazy(() => import("./pages/DashboardAnalytics"));
 const DashboardIntegrations = lazy(() => import("./pages/DashboardIntegrations"));
 const DashboardSettings = lazy(() => import("./pages/DashboardSettings"));
 const DashboardAppearance = lazy(() => import("./pages/DashboardAppearance"));
+const DashboardPlans = lazy(() => import("./pages/DashboardPlans"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const CardRedirect = lazy(() => import("./pages/CardRedirect"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -67,6 +68,7 @@ const App = () => (
                   <Route path="analytics" element={<DashboardAnalytics />} />
                   <Route path="appearance" element={<DashboardAppearance />} />
                   <Route path="integrations" element={<DashboardIntegrations />} />
+                  <Route path="plans" element={<DashboardPlans />} />
                   <Route path="settings" element={<DashboardSettings />} />
                 </Route>
                 <Route path="/admin" element={<AdminLayout />}>

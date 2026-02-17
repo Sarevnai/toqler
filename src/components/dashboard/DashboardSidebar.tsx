@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, User, CreditCard, Users, BarChart3, Puzzle, Settings, LogOut, Palette } from "lucide-react";
+import { LayoutDashboard, User, CreditCard, Users, BarChart3, Puzzle, Settings, LogOut, Palette, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const items = [
@@ -22,6 +22,7 @@ const items = [
   { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
   { title: "Aparência", url: "/dashboard/appearance", icon: Palette },
   { title: "Integrações", url: "/dashboard/integrations", icon: Puzzle },
+  { title: "Planos", url: "/dashboard/plans", icon: Crown },
   { title: "Configurações", url: "/dashboard/settings", icon: Settings },
 ];
 
