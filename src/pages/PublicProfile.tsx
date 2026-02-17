@@ -222,11 +222,11 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
           ) : (
             <div className="w-full h-full flex items-center justify-center"><User className="h-24 w-24" style={{ color: T.text3 }} /></div>
           )}
-          <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 100%)" }} />
+          <div className="absolute bottom-0 left-0 right-0 h-[40%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)`, opacity: 0.7 }} />
         </motion.div>
 
         {/* ── Card Body ── */}
-        <motion.div className="relative z-10 -mt-6 rounded-t-2xl px-6 pt-8 pb-5" style={{ background: T.card }} variants={slideUp(0.3)} initial="hidden" animate="visible">
+        <motion.div className="relative z-10 -mt-6 rounded-2xl px-6 pt-8 pb-5" style={{ background: T.card }} variants={slideUp(0.3)} initial="hidden" animate="visible">
           <h1 className="font-display text-4xl font-semibold leading-tight -tracking-wide" style={{ color: T.text1 }}>{profile.name}</h1>
           {profile.role_title && (
             <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: T.text2 }}>
