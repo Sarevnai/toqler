@@ -376,7 +376,6 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                     style={{ background: T.bg }}
                   >
                     <s.icon className="w-[22px] h-[22px]" style={{ color: T.text1 }} />
-                    <span className="text-[0.65rem] font-medium uppercase tracking-[0.06em]" style={{ color: T.text2 }}>{s.label}</span>
                   </a>
                 ))}
               </div>
