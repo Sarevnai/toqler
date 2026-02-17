@@ -19,21 +19,28 @@ import TikTokIcon from "@/components/icons/TikTokIcon";
 import GitHubIcon from "@/components/icons/GitHubIcon";
 import XIcon from "@/components/icons/XIcon";
 import PinterestIcon from "@/components/icons/PinterestIcon";
+import ColorInput from "@/components/dashboard/ColorInput";
+import { buildTokens } from "@/lib/color-utils";
 
 /* ── CTA / Social config ── */
 const CTA_ICONS: Record<string, any> = { whatsapp: WhatsAppIcon, instagram: InstagramIcon, linkedin: LinkedInIcon, website: Globe, youtube: YouTubeIcon, tiktok: TikTokIcon, github: GitHubIcon, twitter: XIcon, pinterest: PinterestIcon };
 const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website", youtube: "YouTube", tiktok: "TikTok", github: "GitHub", twitter: "X (Twitter)", pinterest: "Pinterest" };
 
-/* ── Design tokens (matches PublicProfile) ── */
-const T = {
-  bg: "#f5f4f0",
-  card: "#ffffff",
-  accent: "#D4E84B",
-  text1: "#1a1a1a",
-  text2: "#6b6b6b",
-  text3: "#999999",
-  border: "#e8e8e5",
-} as const;
+/* ── Font options ── */
+const FONT_OPTIONS = [
+  { value: "Inter", label: "Inter" },
+  { value: "DM Sans", label: "DM Sans" },
+  { value: "Playfair Display", label: "Playfair Display" },
+  { value: "JetBrains Mono", label: "JetBrains Mono" },
+];
+
+/* ── Color field definitions ── */
+const COLOR_FIELDS = [
+  { key: "accent_color", label: "Cor de acento", description: "Botões e destaques" },
+  { key: "bg_color", label: "Cor de fundo", description: "Background da página" },
+  { key: "card_color", label: "Cor dos cards", description: "Cards de bio, contato, social" },
+  { key: "text_color", label: "Cor do texto", description: "Textos principais e títulos" },
+] as const;
 
 /* ── Section toggle definitions ── */
 const SECTION_TOGGLES: [string, string][] = [
@@ -55,12 +62,16 @@ const defaultLayout = {
   show_social: true,
   show_video: true,
   cta_order: ["whatsapp", "instagram", "linkedin", "website", "youtube", "tiktok", "github", "twitter", "pinterest"],
-  // Keep legacy fields for DB compat
   layout_style: "card",
   button_style: "rounded",
   font_style: "default",
   background_style: "solid",
   show_stats_row: true,
+  accent_color: "#D4E84B",
+  bg_color: "#f5f4f0",
+  card_color: "#ffffff",
+  text_color: "#1a1a1a",
+  font_family: "Inter",
 };
 
 export default function DashboardAppearance() {
@@ -118,9 +129,13 @@ export default function DashboardAppearance() {
       show_social: layout.show_social,
       show_video: layout.show_video,
       cta_order: layout.cta_order,
+      accent_color: layout.accent_color,
+      bg_color: layout.bg_color,
+      card_color: layout.card_color,
+      text_color: layout.text_color,
+      font_family: layout.font_family,
     };
 
-    // Save tagline to companies table
     if (company) {
       await supabase.from("companies").update({ tagline: company.tagline }).eq("id", companyId);
     }
@@ -149,6 +164,7 @@ export default function DashboardAppearance() {
 
   const ctaOrder = layout.cta_order as string[];
   const p = previewProfile;
+  const T = buildTokens(layout);
 
   return (
     <div className="space-y-6">
@@ -160,6 +176,37 @@ export default function DashboardAppearance() {
       <div className="grid lg:grid-cols-[1fr_380px] gap-6">
         {/* ── Editor controls ── */}
         <div className="space-y-4">
+          {/* Brand Kit */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Kit de Marca</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              {COLOR_FIELDS.map(({ key, label, description }) => (
+                <div key={key}>
+                  <ColorInput
+                    label={label}
+                    value={layout[key]}
+                    onChange={(hex) => setLayout({ ...layout, [key]: hex })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+                </div>
+              ))}
+
+              <div className="space-y-1.5 pt-2">
+                <Label className="text-sm">Fonte</Label>
+                <Select value={layout.font_family} onValueChange={(v) => setLayout({ ...layout, font_family: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FONT_OPTIONS.map((f) => (
+                      <SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Tagline */}
           <Card>
             <CardHeader><CardTitle className="text-base">Tagline</CardTitle></CardHeader>
@@ -216,7 +263,7 @@ export default function DashboardAppearance() {
           </Button>
         </div>
 
-        {/* ── Live preview (miniature of new card) ── */}
+        {/* ── Live preview ── */}
         <div className="lg:sticky lg:top-6 h-fit">
           <Card>
             <CardHeader className="pb-2">
@@ -231,7 +278,7 @@ export default function DashboardAppearance() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="rounded-b-lg overflow-hidden" style={{ background: T.bg }}>
+              <div className="rounded-b-lg overflow-hidden" style={{ background: T.bg, fontFamily: layout.font_family }}>
                 {/* Hero */}
                 <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
                   {p?.photo_url ? (
@@ -251,7 +298,6 @@ export default function DashboardAppearance() {
                     </p>
                   )}
 
-                  {/* Brand row */}
                   {layout.show_company_header && company && (
                     <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
                       {company.logo_url ? <img src={company.logo_url} alt="" className="h-20 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
@@ -259,7 +305,6 @@ export default function DashboardAppearance() {
                     </div>
                   )}
 
-                  {/* CTAs */}
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     {layout.show_save_contact && (
                       <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.border}`, color: T.text1 }}>
@@ -276,7 +321,6 @@ export default function DashboardAppearance() {
 
                 {/* Sections */}
                 <div className="px-3 pb-4 space-y-2" style={{ background: T.bg }}>
-                  {/* Bio */}
                   {layout.show_bio && p?.bio && (
                     <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Minha Bio</p>
@@ -284,7 +328,6 @@ export default function DashboardAppearance() {
                     </div>
                   )}
 
-                  {/* Contact */}
                   {layout.show_contact && (p?.whatsapp || p?.email) && (
                     <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Contato</p>
@@ -305,7 +348,6 @@ export default function DashboardAppearance() {
                     </div>
                   )}
 
-                  {/* Social */}
                   {layout.show_social && (
                     <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Social</p>
@@ -322,7 +364,6 @@ export default function DashboardAppearance() {
                     </div>
                   )}
 
-                  {/* Video */}
                   {layout.show_video && p?.video_url && (
                     <div className="rounded-lg overflow-hidden shadow-sm" style={{ background: T.card }}>
                       <div className="w-full aspect-video bg-muted flex items-center justify-center">
@@ -332,7 +373,6 @@ export default function DashboardAppearance() {
                   )}
                 </div>
 
-                {/* Footer */}
                 {!company?.hide_branding && (
                   <div className="text-center py-3" style={{ background: T.bg }}>
                     <span className="text-[7px] uppercase tracking-wider" style={{ color: T.text3 }}>Powered by Toqler</span>

@@ -35,6 +35,7 @@ import GitHubIcon from "@/components/icons/GitHubIcon";
 import XIcon from "@/components/icons/XIcon";
 import PinterestIcon from "@/components/icons/PinterestIcon";
 import { motion } from "framer-motion";
+import { buildTokens } from "@/lib/color-utils";
 
 /* ── Helpers ── */
 
@@ -70,17 +71,13 @@ function getDevice(): string {
   return "desktop";
 }
 
-/* ── Design tokens (local to public card) ── */
-const T = {
-  bg: "#f5f4f0",
-  card: "#ffffff",
-  accent: "#D4E84B",
-  accentHover: "#c5d93f",
-  text1: "#1a1a1a",
-  text2: "#6b6b6b",
-  text3: "#999999",
-  border: "#e8e8e5",
-} as const;
+/* ── Default design tokens (overridden by company brand kit) ── */
+const DEFAULT_TOKENS = {
+  accent_color: "#D4E84B",
+  bg_color: "#f5f4f0",
+  card_color: "#ffffff",
+  text_color: "#1a1a1a",
+};
 
 /* ── Animation variants ── */
 const fadeInPhoto = { hidden: { opacity: 0, scale: 1.05 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.8, delay: 0.2 } } };
@@ -182,6 +179,15 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
     setTimeout(() => { setDrawerOpen(false); setSubmitted(false); setLeadForm({ name: "", email: "", phone: "", consent: false }); }, 2500);
   };
 
+  /* ── Dynamic design tokens from company brand kit ── */
+  const T = buildTokens({
+    accent_color: layout?.accent_color || DEFAULT_TOKENS.accent_color,
+    bg_color: layout?.bg_color || DEFAULT_TOKENS.bg_color,
+    card_color: layout?.card_color || DEFAULT_TOKENS.card_color,
+    text_color: layout?.text_color || DEFAULT_TOKENS.text_color,
+  });
+  const fontFamily = layout?.font_family || "Inter";
+
   /* ── Loading / Not found ── */
   if (loading) return <div className="flex min-h-screen items-center justify-center" style={{ background: T.bg }}><Loader2 className="h-8 w-8 animate-spin" style={{ color: T.text2 }} /></div>;
   if (!profile) return <div className="flex min-h-screen items-center justify-center" style={{ background: T.bg }}><p style={{ color: T.text2 }}>Perfil não encontrado</p></div>;
@@ -206,8 +212,8 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
   ].filter(Boolean) as { icon: any; label: string; value: string; href: string }[];
 
   return (
-    <div className="min-h-screen flex justify-center items-start" style={{ background: T.bg }}>
-      <div className="w-full max-w-[430px] min-h-screen" style={{ background: T.bg }}>
+    <div className="min-h-screen flex justify-center items-start" style={{ background: T.bg, fontFamily }}>
+      <div className="w-full max-w-[430px] min-h-screen" style={{ background: T.bg, fontFamily }}>
 
         {/* ── Hero ── */}
         <motion.div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }} variants={fadeInPhoto} initial="hidden" animate="visible">
