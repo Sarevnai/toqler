@@ -1,34 +1,31 @@
 
 
-# Corrigir ordem dos icones sociais para incluir novas redes
+# Corrigir alteracao de logo da empresa
 
 ## Problema
-O registro salvo no banco de dados tem `cta_order` com apenas 4 redes (`whatsapp, instagram, linkedin, website`). As 5 novas redes (`youtube, tiktok, github, twitter, pinterest`) nao aparecem na lista de reordenacao porque nao estao no array salvo.
+Quando o usuario faz upload de uma nova logo, o arquivo e salvo corretamente no storage (com `upsert: true`), mas a URL permanece identica (ex: `.../logo.png`). O navegador usa a versao em cache e nao exibe a nova imagem.
 
 ## Solucao
-Ao carregar o layout do banco, fazer um merge inteligente: manter a ordem salva das redes existentes e adicionar ao final as redes que ainda nao estao no array.
+Adicionar um parametro de cache-busting (timestamp) na URL da logo apos o upload, forcando o navegador a baixar a nova versao.
 
 ## Detalhes tecnicos
 
-### Arquivo: `src/pages/DashboardAppearance.tsx`
+### Arquivo: `src/pages/DashboardSettings.tsx`
 
-No `useEffect` onde o layout e carregado (ao processar `layoutRes.data`), adicionar logica de merge:
+Na funcao `handleSave`, apos o upload bem-sucedido, adicionar um timestamp na URL:
 
 ```typescript
-// Depois de carregar layoutRes.data
-const savedOrder = layoutRes.data.cta_order || [];
-const allNetworks = defaultLayout.cta_order;
-// Manter ordem salva + adicionar novas redes ao final
-const mergedOrder = [
-  ...savedOrder,
-  ...allNetworks.filter(n => !savedOrder.includes(n))
-];
-setLayout({ ...defaultLayout, ...layoutRes.data, cta_order: mergedOrder });
+// Linha ~102 - Adicionar cache-busting
+logo_url = `${SUPABASE_URL}/storage/v1/object/public/assets/${path}?t=${Date.now()}`;
 ```
 
-Isso garante que:
-- Redes ja ordenadas pelo usuario mantem sua posicao
-- Novas redes sao adicionadas ao final da lista automaticamente
-- Nenhuma rede e duplicada
+Tambem atualizar o estado `company` apos salvar para que o preview na mesma pagina reflita a mudanca sem precisar recarregar:
 
-Apenas 1 arquivo precisa ser alterado: `src/pages/DashboardAppearance.tsx`.
+```typescript
+// Apos o update bem-sucedido (depois da linha 109)
+setCompany(prev => prev ? { ...prev, ...form, logo_url } : null);
+```
+
+### Resumo das alteracoes
+- 1 arquivo modificado: `src/pages/DashboardSettings.tsx`
+- 2 linhas alteradas: cache-busting na URL + atualizacao do estado local
