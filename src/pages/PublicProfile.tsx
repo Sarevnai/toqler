@@ -218,7 +218,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
         {/* ── Hero ── */}
         <motion.div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }} variants={fadeInPhoto} initial="hidden" animate="visible">
           {profile.photo_url ? (
-            <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover object-[center_20%]" />
+            <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover" style={{ objectPosition: `${(profile as any).photo_offset_x ?? 50}% ${(profile as any).photo_offset_y ?? 30}%` }} />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><User className="h-24 w-24" style={{ color: T.text3 }} /></div>
           )}
