@@ -53,9 +53,15 @@ export default function DashboardLeads() {
 
     query = query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
-    const { data, count } = await query;
-    setLeads(data ?? []);
-    setTotalCount(count ?? 0);
+    try {
+      const { data, count, error } = await query;
+      if (error) { console.error("Leads fetch error:", error); toast.error("Erro ao carregar leads."); }
+      setLeads(data ?? []);
+      setTotalCount(count ?? 0);
+    } catch (err) {
+      console.error("Leads fetch error:", err);
+      toast.error("Erro ao carregar leads.");
+    }
     setLoading(false);
   }, [companyId, profileFilter, periodFilter, search, page]);
 
@@ -108,26 +114,28 @@ export default function DashboardLeads() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const exportCSV = async () => {
-    // Fetch all filtered leads for export (not just current page)
-    let query = supabase
-      .from("leads")
-      .select("*, profiles(name)")
-      .eq("company_id", companyId!)
-      .order("created_at", { ascending: false });
+    try {
+      // Fetch all filtered leads for export (not just current page)
+      let query = supabase
+        .from("leads")
+        .select("*, profiles(name)")
+        .eq("company_id", companyId!)
+        .order("created_at", { ascending: false });
 
-    if (profileFilter !== "all") query = query.eq("profile_id", profileFilter);
-    if (periodFilter !== "all") {
-      const days = parseInt(periodFilter);
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - days);
-      query = query.gte("created_at", cutoff.toISOString());
-    }
-    if (search.trim()) {
-      query = query.or(`name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`);
-    }
+      if (profileFilter !== "all") query = query.eq("profile_id", profileFilter);
+      if (periodFilter !== "all") {
+        const days = parseInt(periodFilter);
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        query = query.gte("created_at", cutoff.toISOString());
+      }
+      if (search.trim()) {
+        query = query.or(`name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`);
+      }
 
-    const { data: allLeads } = await query;
-    const filtered = allLeads ?? [];
+      const { data: allLeads, error } = await query;
+      if (error) { console.error("CSV export error:", error); toast.error("Erro ao exportar CSV."); return; }
+      const filtered = allLeads ?? [];
 
     const bom = "\uFEFF";
     const header = "Nome,Email,Telefone,Perfil,Data\n";
@@ -139,7 +147,11 @@ export default function DashboardLeads() {
     a.download = "leads.csv";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("CSV exportado!");
+      toast.success("CSV exportado!");
+    } catch (err) {
+      console.error("CSV export error:", err);
+      toast.error("Erro ao exportar CSV.");
+    }
   };
 
   return (

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -22,6 +23,8 @@ const DashboardAppearance = lazy(() => import("./pages/DashboardAppearance"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const CardRedirect = lazy(() => import("./pages/CardRedirect"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ProtectedRoute = lazy(() => import("./components/auth/ProtectedRoute"));
+const PublicOnlyRoute = lazy(() => import("./components/auth/PublicOnlyRoute"));
 
 const queryClient = new QueryClient();
 
@@ -38,26 +41,28 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/p/:profileId" element={<PublicProfile />} />
-              <Route path="/c/*" element={<CardRedirect />} />
-              <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<DashboardOverview />} />
-                <Route path="profiles" element={<DashboardProfiles />} />
-                <Route path="cards" element={<DashboardCards />} />
-                <Route path="leads" element={<DashboardLeads />} />
-                <Route path="analytics" element={<DashboardAnalytics />} />
-                <Route path="appearance" element={<DashboardAppearance />} />
-                <Route path="integrations" element={<DashboardIntegrations />} />
-                <Route path="settings" element={<DashboardSettings />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
+                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                <Route path="/p/:profileId" element={<PublicProfile />} />
+                <Route path="/c/*" element={<CardRedirect />} />
+                <Route path="/dashboard" element={<DashboardLayout />}>
+                  <Route index element={<DashboardOverview />} />
+                  <Route path="profiles" element={<DashboardProfiles />} />
+                  <Route path="cards" element={<DashboardCards />} />
+                  <Route path="leads" element={<DashboardLeads />} />
+                  <Route path="analytics" element={<DashboardAnalytics />} />
+                  <Route path="appearance" element={<DashboardAppearance />} />
+                  <Route path="integrations" element={<DashboardIntegrations />} />
+                  <Route path="settings" element={<DashboardSettings />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

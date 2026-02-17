@@ -7,6 +7,7 @@ import { CreditCard, User, Eye, MousePointerClick, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { toast } from "sonner";
 import type { Profile, DashboardKpis, DailyChartPoint } from "@/types/entities";
 
 export default function DashboardOverview() {
@@ -19,15 +20,25 @@ export default function DashboardOverview() {
     if (!companyId) return;
 
     const fetchData = async () => {
-      const [kpiRes, chartRes, profilesRes] = await Promise.all([
-        supabase.rpc("get_dashboard_kpis", { _company_id: companyId }),
-        supabase.rpc("get_daily_chart", { _company_id: companyId }),
-        supabase.from("profiles").select("*").eq("company_id", companyId),
-      ]);
+      try {
+        const [kpiRes, chartRes, profilesRes] = await Promise.all([
+          supabase.rpc("get_dashboard_kpis", { _company_id: companyId }),
+          supabase.rpc("get_daily_chart", { _company_id: companyId }),
+          supabase.from("profiles").select("*").eq("company_id", companyId),
+        ]);
 
-      if (kpiRes.data) setKpis(kpiRes.data as unknown as DashboardKpis);
-      if (chartRes.data) setChartData(chartRes.data as unknown as DailyChartPoint[]);
-      setProfiles(profilesRes.data ?? []);
+        if (kpiRes.error || chartRes.error) {
+          console.error("Dashboard KPI/chart error:", kpiRes.error, chartRes.error);
+          toast.error("Erro ao carregar dashboard. Tente novamente.");
+        }
+
+        if (kpiRes.data) setKpis(kpiRes.data as unknown as DashboardKpis);
+        if (chartRes.data) setChartData(chartRes.data as unknown as DailyChartPoint[]);
+        setProfiles(profilesRes.data ?? []);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+        toast.error("Erro ao carregar dashboard. Tente novamente.");
+      }
     };
 
     fetchData();

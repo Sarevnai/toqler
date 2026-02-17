@@ -42,13 +42,19 @@ export default function DashboardIntegrations() {
   const fetchWebhooks = async () => {
     if (!companyId) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("integrations")
-      .select("*")
-      .eq("company_id", companyId)
-      .eq("type", "webhook")
-      .order("created_at", { ascending: false });
-    setWebhooks(data ?? []);
+    try {
+      const { data, error } = await supabase
+        .from("integrations")
+        .select("*")
+        .eq("company_id", companyId)
+        .eq("type", "webhook")
+        .order("created_at", { ascending: false });
+      if (error) { console.error("Webhooks fetch error:", error); toast.error("Erro ao carregar integrações."); }
+      setWebhooks(data ?? []);
+    } catch (err) {
+      console.error("Webhooks fetch error:", err);
+      toast.error("Erro ao carregar integrações.");
+    }
     setLoading(false);
   };
 
