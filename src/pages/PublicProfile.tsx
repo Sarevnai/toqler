@@ -226,7 +226,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
         </motion.div>
 
         {/* ── Card Body ── */}
-        <motion.div className="relative z-10 -mt-6 rounded-2xl px-6 pt-8 pb-5" style={{ background: T.card }} variants={slideUp(0.3)} initial="hidden" animate="visible">
+        <motion.div className="relative z-10 -mt-4 rounded-2xl pt-5 pb-3 px-6 mx-4 mb-5" style={{ background: T.card }} variants={slideUp(0.3)} initial="hidden" animate="visible">
           <h1 className="font-display text-4xl font-semibold leading-tight -tracking-wide" style={{ color: T.text1 }}>{profile.name}</h1>
           {profile.role_title && (
             <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: T.text2 }}>
