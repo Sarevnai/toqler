@@ -8,8 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Loader2, Save, GripVertical, User, Globe, Download, Send,
-  Phone, Mail,
-} from "lucide-react";
+  Phone, Mail } from
+"lucide-react";
 import { toast } from "sonner";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import LinkedInIcon from "@/components/icons/LinkedInIcon";
@@ -28,30 +28,30 @@ const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "I
 
 /* ── Font options ── */
 const FONT_OPTIONS = [
-  { value: "Inter", label: "Inter" },
-  { value: "DM Sans", label: "DM Sans" },
-  { value: "Playfair Display", label: "Playfair Display" },
-  { value: "JetBrains Mono", label: "JetBrains Mono" },
-];
+{ value: "Inter", label: "Inter" },
+{ value: "DM Sans", label: "DM Sans" },
+{ value: "Playfair Display", label: "Playfair Display" },
+{ value: "JetBrains Mono", label: "JetBrains Mono" }];
+
 
 /* ── Color field definitions ── */
 const COLOR_FIELDS = [
-  { key: "accent_color", label: "Cor de acento", description: "Botões e destaques" },
-  { key: "bg_color", label: "Cor de fundo", description: "Background da página" },
-  { key: "card_color", label: "Cor dos cards", description: "Cards de bio, contato, social" },
-  { key: "text_color", label: "Cor do texto", description: "Textos principais e títulos" },
-] as const;
+{ key: "accent_color", label: "Cor de acento", description: "Botões e destaques" },
+{ key: "bg_color", label: "Cor de fundo", description: "Background da página" },
+{ key: "card_color", label: "Cor dos cards", description: "Cards de bio, contato, social" },
+{ key: "text_color", label: "Cor do texto", description: "Textos principais e títulos" }] as
+const;
 
 /* ── Section toggle definitions ── */
 const SECTION_TOGGLES: [string, string][] = [
-  ["show_company_header", "Cabeçalho da empresa"],
-  ["show_save_contact", "Botão Salvar Contato"],
-  ["show_lead_form", "Botão Trocar Contato"],
-  ["show_bio", "Seção Bio"],
-  ["show_contact", "Seção Contato"],
-  ["show_social", "Seção Social"],
-  ["show_video", "Seção Vídeo"],
-];
+["show_company_header", "Cabeçalho da empresa"],
+["show_save_contact", "Botão Salvar Contato"],
+["show_lead_form", "Botão Trocar Contato"],
+["show_bio", "Seção Bio"],
+["show_contact", "Seção Contato"],
+["show_social", "Seção Social"],
+["show_video", "Seção Vídeo"]];
+
 
 const defaultLayout = {
   show_company_header: true,
@@ -71,7 +71,7 @@ const defaultLayout = {
   bg_color: "#f5f4f0",
   card_color: "#ffffff",
   text_color: "#1a1a1a",
-  font_family: "Inter",
+  font_family: "Inter"
 };
 
 export default function DashboardAppearance() {
@@ -90,21 +90,21 @@ export default function DashboardAppearance() {
       setLoading(true);
       try {
         const [layoutRes, companyRes, profilesRes] = await Promise.all([
-          supabase.from("profile_layouts").select("*").eq("company_id", companyId).maybeSingle(),
-          supabase.from("companies").select("*").eq("id", companyId).single(),
-          supabase.from("profiles").select("*").eq("company_id", companyId).limit(5),
-        ]);
+        supabase.from("profile_layouts").select("*").eq("company_id", companyId).maybeSingle(),
+        supabase.from("companies").select("*").eq("id", companyId).single(),
+        supabase.from("profiles").select("*").eq("company_id", companyId).limit(5)]
+        );
         if (layoutRes.error || companyRes.error) {
           console.error("Appearance load error:", layoutRes.error, companyRes.error);
           toast.error("Erro ao carregar aparência.");
         }
         if (layoutRes.data) {
-          const savedOrder = (layoutRes.data.cta_order as string[]) || [];
+          const savedOrder = layoutRes.data.cta_order as string[] || [];
           const allNetworks = defaultLayout.cta_order;
           const mergedOrder = [
-            ...savedOrder,
-            ...allNetworks.filter(n => !savedOrder.includes(n))
-          ];
+          ...savedOrder,
+          ...allNetworks.filter((n) => !savedOrder.includes(n))];
+
           setLayout({ ...defaultLayout, ...layoutRes.data, cta_order: mergedOrder });
           setLayoutId(layoutRes.data.id);
         }
@@ -143,7 +143,7 @@ export default function DashboardAppearance() {
         bg_color: layout.bg_color,
         card_color: layout.card_color,
         text_color: layout.text_color,
-        font_family: layout.font_family,
+        font_family: layout.font_family
       };
 
       if (company) {
@@ -152,10 +152,10 @@ export default function DashboardAppearance() {
 
       if (layoutId) {
         const { error } = await supabase.from("profile_layouts").update(payload).eq("id", layoutId);
-        if (error) { toast.error("Erro ao salvar aparência"); setSaving(false); return; }
+        if (error) {toast.error("Erro ao salvar aparência");setSaving(false);return;}
       } else {
         const { data, error } = await supabase.from("profile_layouts").insert(payload).select("id").single();
-        if (error) { toast.error("Erro ao salvar aparência"); setSaving(false); return; }
+        if (error) {toast.error("Erro ao salvar aparência");setSaving(false);return;}
         setLayoutId(data.id);
       }
       toast.success("Aparência salva!");
@@ -194,27 +194,27 @@ export default function DashboardAppearance() {
           <Card>
             <CardHeader><CardTitle className="text-base">Kit de Marca</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              {COLOR_FIELDS.map(({ key, label, description }) => (
-                <div key={key}>
+              {COLOR_FIELDS.map(({ key, label, description }) =>
+              <div key={key}>
                   <ColorInput
-                    label={label}
-                    value={layout[key]}
-                    onChange={(hex) => setLayout({ ...layout, [key]: hex })}
-                  />
+                  label={label}
+                  value={layout[key]}
+                  onChange={(hex) => setLayout({ ...layout, [key]: hex })} />
+
                   <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
                 </div>
-              ))}
+              )}
 
               <div className="space-y-1.5 pt-2">
                 <Label className="text-sm">Fonte</Label>
                 <Select value={layout.font_family} onValueChange={(v) => setLayout({ ...layout, font_family: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {FONT_OPTIONS.map((f) => (
-                      <SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                    {FONT_OPTIONS.map((f) =>
+                    <SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>
                         {f.label}
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -231,8 +231,8 @@ export default function DashboardAppearance() {
                   className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   value={company?.tagline || ""}
                   onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
-                  placeholder="We connect. For real."
-                />
+                  placeholder="We connect. For real." />
+
               </div>
             </CardContent>
           </Card>
@@ -241,12 +241,12 @@ export default function DashboardAppearance() {
           <Card>
             <CardHeader><CardTitle className="text-base">Seções visíveis</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {SECTION_TOGGLES.map(([key, label]) => (
-                <div key={key} className="flex items-center justify-between">
+              {SECTION_TOGGLES.map(([key, label]) =>
+              <div key={key} className="flex items-center justify-between">
                   <Label>{label}</Label>
                   <Switch checked={layout[key]} onCheckedChange={(v) => setLayout({ ...layout, [key]: v })} />
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
@@ -265,8 +265,8 @@ export default function DashboardAppearance() {
                       <Button variant="ghost" size="sm" disabled={i === 0} onClick={() => moveCTA(i, "up")} className="h-7 w-7 p-0">↑</Button>
                       <Button variant="ghost" size="sm" disabled={i === ctaOrder.length - 1} onClick={() => moveCTA(i, "down")} className="h-7 w-7 p-0">↓</Button>
                     </div>
-                  </div>
-                );
+                  </div>);
+
               })}
             </CardContent>
           </Card>
@@ -283,120 +283,120 @@ export default function DashboardAppearance() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Preview</CardTitle>
-                {profiles.length > 1 && (
-                  <Select value={previewProfile?.id} onValueChange={(v) => setPreviewProfile(profiles.find((pp) => pp.id === v))}>
+                {profiles.length > 1 &&
+                <Select value={previewProfile?.id} onValueChange={(v) => setPreviewProfile(profiles.find((pp) => pp.id === v))}>
                     <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{profiles.map((pp) => <SelectItem key={pp.id} value={pp.id}>{pp.name}</SelectItem>)}</SelectContent>
                   </Select>
-                )}
+                }
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="rounded-b-lg overflow-hidden" style={{ background: T.bg, fontFamily: layout.font_family }}>
                 {/* Hero */}
                 <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
-                  {p?.photo_url ? (
-                    <img src={p.photo_url} alt="" className="w-full h-full object-cover object-[center_20%]" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
-                  )}
+                  {p?.photo_url ?
+                  <img src={p.photo_url} alt="" className="w-full h-full object-cover object-[center_20%]" /> :
+
+                  <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
+                  }
                   <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 100%)" }} />
                 </div>
 
                 {/* Card body */}
-                <div className="relative z-10 -mt-4 rounded-t-xl px-4 pt-5 pb-3" style={{ background: T.card }}>
+                <div className="relative z-10 -mt-4 rounded-t-xl pt-5 pb-3 px-[18px] py-[34px] mb-[36px]" style={{ background: T.card }}>
                   <h2 className="font-display text-xl font-semibold leading-tight" style={{ color: T.text1 }}>{p?.name || "Nome do perfil"}</h2>
-                  {p?.role_title && (
-                    <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.text2 }}>
+                  {p?.role_title &&
+                  <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.text2 }}>
                       {p.role_title}{company ? ` at ${company.name}` : ""}
                     </p>
-                  )}
+                  }
 
-                  {layout.show_company_header && company && (
-                    <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                  {layout.show_company_header && company &&
+                  <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
                       {company.logo_url ? <img src={company.logo_url} alt="" className="h-20 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
                       {company.tagline && <span className="text-[8px] italic" style={{ color: T.text2 }}>{company.tagline}</span>}
                     </div>
-                  )}
+                  }
 
                   <div className="grid grid-cols-2 gap-2 mt-3">
-                    {layout.show_save_contact && (
-                      <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.border}`, color: T.text1 }}>
+                    {layout.show_save_contact &&
+                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.border}`, color: T.text1 }}>
                         <Download className="w-3 h-3" /> Salvar
                       </div>
-                    )}
-                    {layout.show_lead_form && (
-                      <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ background: T.accent, color: T.text1 }}>
+                    }
+                    {layout.show_lead_form &&
+                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ background: T.accent, color: T.text1 }}>
                         <Send className="w-3 h-3" /> Trocar
                       </div>
-                    )}
+                    }
                   </div>
                 </div>
 
                 {/* Sections */}
                 <div className="px-3 pb-4 space-y-2" style={{ background: T.bg }}>
-                  {layout.show_bio && p?.bio && (
-                    <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
+                  {layout.show_bio && p?.bio &&
+                  <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Minha Bio</p>
                       <p className="text-[8px] leading-relaxed line-clamp-2" style={{ color: T.text2 }}>{p.bio}</p>
                     </div>
-                  )}
+                  }
 
-                  {layout.show_contact && (p?.whatsapp || p?.email) && (
-                    <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
+                  {layout.show_contact && (p?.whatsapp || p?.email) &&
+                  <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Contato</p>
                       <div className="flex flex-col gap-1.5">
-                        {p?.whatsapp && (
-                          <div className="flex items-center gap-2">
+                        {p?.whatsapp &&
+                      <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Phone className="w-3 h-3" style={{ color: T.text1 }} /></div>
                             <span className="text-[8px]" style={{ color: T.text2 }}>{p.whatsapp}</span>
                           </div>
-                        )}
-                        {p?.email && (
-                          <div className="flex items-center gap-2">
+                      }
+                        {p?.email &&
+                      <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Mail className="w-3 h-3" style={{ color: T.text1 }} /></div>
                             <span className="text-[8px]" style={{ color: T.text2 }}>{p.email}</span>
                           </div>
-                        )}
+                      }
                       </div>
                     </div>
-                  )}
+                  }
 
-                  {layout.show_social && (
-                    <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
+                  {layout.show_social &&
+                  <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Social</p>
                       <div className="grid grid-cols-4 gap-1.5">
                         {ctaOrder.filter((key) => p?.[key]).map((key) => {
-                          const Icon = CTA_ICONS[key] || Globe;
-                          return (
-                            <div key={key} className="flex items-center justify-center py-2 rounded" style={{ background: T.bg }}>
+                        const Icon = CTA_ICONS[key] || Globe;
+                        return (
+                          <div key={key} className="flex items-center justify-center py-2 rounded" style={{ background: T.bg }}>
                               <Icon className="w-[18px] h-[18px]" style={{ color: T.text1 }} />
-                            </div>
-                          );
-                        })}
+                            </div>);
+
+                      })}
                       </div>
                     </div>
-                  )}
+                  }
 
-                  {layout.show_video && p?.video_url && (
-                    <div className="rounded-lg overflow-hidden shadow-sm" style={{ background: T.card }}>
+                  {layout.show_video && p?.video_url &&
+                  <div className="rounded-lg overflow-hidden shadow-sm" style={{ background: T.card }}>
                       <div className="w-full aspect-video bg-muted flex items-center justify-center">
                         <span className="text-[9px]" style={{ color: T.text3 }}>▶ Vídeo</span>
                       </div>
                     </div>
-                  )}
+                  }
                 </div>
 
-                {!company?.hide_branding && (
-                  <div className="text-center py-3" style={{ background: T.bg }}>
+                {!company?.hide_branding &&
+                <div className="text-center py-3" style={{ background: T.bg }}>
                     <span className="text-[7px] uppercase tracking-wider" style={{ color: T.text3 }}>Powered by Toqler</span>
                   </div>
-                )}
+                }
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
