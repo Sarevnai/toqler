@@ -756,6 +756,8 @@ export type Database = {
           instagram: string | null
           linkedin: string | null
           name: string
+          photo_offset_x: number
+          photo_offset_y: number
           photo_url: string | null
           pinterest: string | null
           published: boolean
@@ -780,6 +782,8 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           name: string
+          photo_offset_x?: number
+          photo_offset_y?: number
           photo_url?: string | null
           pinterest?: string | null
           published?: boolean
@@ -804,6 +808,8 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           name?: string
+          photo_offset_x?: number
+          photo_offset_y?: number
           photo_url?: string | null
           pinterest?: string | null
           published?: boolean

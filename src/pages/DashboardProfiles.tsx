@@ -11,11 +11,12 @@ import { User, Plus, Eye, Search, Trash2, Loader2, Pencil, Upload } from "lucide
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ConfirmDialog, useConfirmDialog } from "@/components/dashboard/ConfirmDialog";
+import PhotoFrameEditor from "@/components/dashboard/PhotoFrameEditor";
 import type { Profile } from "@/types/entities";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-const emptyForm = { name: "", role_title: "", bio: "", email: "", whatsapp: "", instagram: "", linkedin: "", website: "", youtube: "", tiktok: "", github: "", twitter: "", pinterest: "", video_url: "" };
+const emptyForm = { name: "", role_title: "", bio: "", email: "", whatsapp: "", instagram: "", linkedin: "", website: "", youtube: "", tiktok: "", github: "", twitter: "", pinterest: "", video_url: "", photo_offset_x: 50, photo_offset_y: 30 };
 
 export default function DashboardProfiles() {
   const { companyId } = useAuth();
@@ -73,6 +74,8 @@ export default function DashboardProfiles() {
       twitter: (p as any).twitter || "",
       pinterest: (p as any).pinterest || "",
       video_url: p.video_url || "",
+      photo_offset_x: (p as any).photo_offset_x ?? 50,
+      photo_offset_y: (p as any).photo_offset_y ?? 30,
     });
     setPhotoFile(null);
     setPhotoPreview(p.photo_url || null);
@@ -168,16 +171,21 @@ export default function DashboardProfiles() {
           <DialogHeader><DialogTitle>{editingProfile ? "Editar perfil" : "Criar perfil"}</DialogTitle></DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex flex-col items-center gap-3">
-              <div
-                className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {photoPreview ? (
-                  <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                ) : (
+              {photoPreview ? (
+                <PhotoFrameEditor
+                  src={photoPreview}
+                  offsetX={form.photo_offset_x}
+                  offsetY={form.photo_offset_y}
+                  onChange={(x, y) => setForm({ ...form, photo_offset_x: x, photo_offset_y: y })}
+                />
+              ) : (
+                <div
+                  className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <Upload className="h-6 w-6 text-muted-foreground" />
-                )}
-              </div>
+                </div>
+              )}
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
               <button type="button" className="text-xs text-primary hover:underline" onClick={() => fileInputRef.current?.click()}>
                 {photoPreview ? "Trocar foto" : "Adicionar foto"}
