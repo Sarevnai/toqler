@@ -15,7 +15,7 @@ import type { Profile } from "@/types/entities";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-const emptyForm = { name: "", role_title: "", bio: "", email: "", whatsapp: "", instagram: "", linkedin: "", website: "", video_url: "" };
+const emptyForm = { name: "", role_title: "", bio: "", email: "", whatsapp: "", instagram: "", linkedin: "", website: "", youtube: "", tiktok: "", github: "", twitter: "", pinterest: "", video_url: "" };
 
 export default function DashboardProfiles() {
   const { companyId } = useAuth();
@@ -61,6 +61,11 @@ export default function DashboardProfiles() {
       instagram: p.instagram || "",
       linkedin: p.linkedin || "",
       website: p.website || "",
+      youtube: (p as any).youtube || "",
+      tiktok: (p as any).tiktok || "",
+      github: (p as any).github || "",
+      twitter: (p as any).twitter || "",
+      pinterest: (p as any).pinterest || "",
       video_url: p.video_url || "",
     });
     setPhotoFile(null);
@@ -181,6 +186,11 @@ export default function DashboardProfiles() {
               <div className="space-y-2"><Label>Instagram</Label><Input value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /></div>
               <div className="space-y-2"><Label>LinkedIn</Label><Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} /></div>
               <div className="space-y-2"><Label>Website</Label><Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+              <div className="space-y-2"><Label>YouTube</Label><Input value={form.youtube} onChange={(e) => setForm({ ...form, youtube: e.target.value })} placeholder="canal ou URL" /></div>
+              <div className="space-y-2"><Label>TikTok</Label><Input value={form.tiktok} onChange={(e) => setForm({ ...form, tiktok: e.target.value })} placeholder="@usuario" /></div>
+              <div className="space-y-2"><Label>GitHub</Label><Input value={form.github} onChange={(e) => setForm({ ...form, github: e.target.value })} placeholder="usuario" /></div>
+              <div className="space-y-2"><Label>X (Twitter)</Label><Input value={form.twitter} onChange={(e) => setForm({ ...form, twitter: e.target.value })} placeholder="@usuario" /></div>
+              <div className="space-y-2"><Label>Pinterest</Label><Input value={form.pinterest} onChange={(e) => setForm({ ...form, pinterest: e.target.value })} placeholder="usuario" /></div>
             </div>
             <Button type="submit" className="w-full" disabled={saving || uploadingPhoto}>
               {(saving || uploadingPhoto) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

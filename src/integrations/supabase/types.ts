@@ -412,18 +412,23 @@ export type Database = {
           cover_url: string | null
           created_at: string
           email: string | null
+          github: string | null
           id: string
           instagram: string | null
           linkedin: string | null
           name: string
           photo_url: string | null
+          pinterest: string | null
           published: boolean
           role_title: string | null
+          tiktok: string | null
+          twitter: string | null
           updated_at: string
           user_id: string | null
           video_url: string | null
           website: string | null
           whatsapp: string | null
+          youtube: string | null
         }
         Insert: {
           bio?: string | null
@@ -431,18 +436,23 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           email?: string | null
+          github?: string | null
           id?: string
           instagram?: string | null
           linkedin?: string | null
           name: string
           photo_url?: string | null
+          pinterest?: string | null
           published?: boolean
           role_title?: string | null
+          tiktok?: string | null
+          twitter?: string | null
           updated_at?: string
           user_id?: string | null
           video_url?: string | null
           website?: string | null
           whatsapp?: string | null
+          youtube?: string | null
         }
         Update: {
           bio?: string | null
@@ -450,18 +460,23 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           email?: string | null
+          github?: string | null
           id?: string
           instagram?: string | null
           linkedin?: string | null
           name?: string
           photo_url?: string | null
+          pinterest?: string | null
           published?: boolean
           role_title?: string | null
+          tiktok?: string | null
+          twitter?: string | null
           updated_at?: string
           user_id?: string | null
           video_url?: string | null
           website?: string | null
           whatsapp?: string | null
+          youtube?: string | null
         }
         Relationships: [
           {

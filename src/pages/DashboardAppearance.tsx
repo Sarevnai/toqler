@@ -14,10 +14,15 @@ import { toast } from "sonner";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import LinkedInIcon from "@/components/icons/LinkedInIcon";
 import InstagramIcon from "@/components/icons/InstagramIcon";
+import YouTubeIcon from "@/components/icons/YouTubeIcon";
+import TikTokIcon from "@/components/icons/TikTokIcon";
+import GitHubIcon from "@/components/icons/GitHubIcon";
+import XIcon from "@/components/icons/XIcon";
+import PinterestIcon from "@/components/icons/PinterestIcon";
 
 /* ── CTA / Social config ── */
-const CTA_ICONS: Record<string, any> = { whatsapp: WhatsAppIcon, instagram: InstagramIcon, linkedin: LinkedInIcon, website: Globe };
-const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website" };
+const CTA_ICONS: Record<string, any> = { whatsapp: WhatsAppIcon, instagram: InstagramIcon, linkedin: LinkedInIcon, website: Globe, youtube: YouTubeIcon, tiktok: TikTokIcon, github: GitHubIcon, twitter: XIcon, pinterest: PinterestIcon };
+const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website", youtube: "YouTube", tiktok: "TikTok", github: "GitHub", twitter: "X (Twitter)", pinterest: "Pinterest" };
 
 /* ── Design tokens (matches PublicProfile) ── */
 const T = {
@@ -49,7 +54,7 @@ const defaultLayout = {
   show_contact: true,
   show_social: true,
   show_video: true,
-  cta_order: ["whatsapp", "instagram", "linkedin", "website"],
+  cta_order: ["whatsapp", "instagram", "linkedin", "website", "youtube", "tiktok", "github", "twitter", "pinterest"],
   // Keep legacy fields for DB compat
   layout_style: "card",
   button_style: "rounded",
@@ -299,11 +304,11 @@ export default function DashboardAppearance() {
                     <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Social</p>
                       <div className="grid grid-cols-4 gap-1.5">
-                        {ctaOrder.map((key) => {
+                        {ctaOrder.filter((key) => p?.[key]).map((key) => {
                           const Icon = CTA_ICONS[key] || Globe;
                           return (
                             <div key={key} className="flex items-center justify-center py-2 rounded" style={{ background: T.bg }}>
-                              <Icon className="w-3.5 h-3.5" style={{ color: T.text1 }} />
+                              <Icon className="w-[18px] h-[18px]" style={{ color: T.text1 }} />
                             </div>
                           );
                         })}
