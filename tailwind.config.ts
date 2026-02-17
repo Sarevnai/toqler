@@ -100,6 +100,7 @@ export default {
   		fontFamily: {
   			sans: ['Inter', 'DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
   			serif: ['Libre Caslon Text', 'ui-serif', 'Georgia', 'serif'],
+  			display: ['Playfair Display', 'serif'],
   			mono: ['JetBrains Mono', 'Cousine', 'ui-monospace', 'SFMono-Regular', 'monospace']
   		}
   	}
