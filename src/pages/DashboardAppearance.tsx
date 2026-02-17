@@ -83,7 +83,13 @@ export default function DashboardAppearance() {
         supabase.from("profiles").select("*").eq("company_id", companyId).limit(5),
       ]);
       if (layoutRes.data) {
-        setLayout({ ...defaultLayout, ...layoutRes.data });
+        const savedOrder = (layoutRes.data.cta_order as string[]) || [];
+        const allNetworks = defaultLayout.cta_order;
+        const mergedOrder = [
+          ...savedOrder,
+          ...allNetworks.filter(n => !savedOrder.includes(n))
+        ];
+        setLayout({ ...defaultLayout, ...layoutRes.data, cta_order: mergedOrder });
         setLayoutId(layoutRes.data.id);
       }
       setCompany(companyRes.data);
