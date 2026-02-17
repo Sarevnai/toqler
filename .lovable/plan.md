@@ -1,132 +1,97 @@
 
 
-# Redesign do Cartao Digital Publico (PublicProfile)
+# Reestruturar a pagina de Aparencia para o novo design do cartao
 
-## Resumo
+## Problema atual
 
-Reescrever completamente a pagina `PublicProfile.tsx` seguindo o design premium do template fornecido: hero photo full-width, card body sobreposto com tipografia serif, secoes modulares em cards separados, e formulario de lead como bottom-sheet (Drawer).
+A pagina `DashboardAppearance.tsx` tem um preview e controles baseados no design antigo:
+- Selects de Layout, Botoes, Fonte e Fundo que nao se aplicam mais (o novo design tem estilo fixo premium)
+- Preview mostra um layout completamente diferente do cartao publico real
+- Ordem dos CTAs mostra WhatsApp/Instagram/LinkedIn/Website como botoes empilhados, mas no novo design eles aparecem como grid de icones na secao Social
 
-## O que muda visualmente
+## O que muda
 
-1. **Hero Section**: Foto full-width com aspect-ratio 4/3.2, overlay gradiente sutil, background fallback escuro
-2. **Card Body**: Sobrepoe o hero com margin-top negativo (-24px), cantos arredondados no topo, contendo:
-   - Nome em fonte serif grande (Playfair Display)
-   - Cargo em uppercase com letter-spacing largo
-   - Linha com logo da empresa + tagline, separada por borda inferior
-   - Dois botoes CTA em grid 2 colunas: "Salvar Contato" (outline) e "Trocar Contato" (accent verde-limao #D4E84B)
-3. **Secoes modulares** (fundo off-white, cards brancos):
-   - Bio
-   - Contato (icones em caixas 40x40 com label + valor)
-   - Social (grid 4 colunas com icones)
-   - Video (se existir)
-4. **Bottom Sheet**: Formulario de lead abre como Drawer (vaul), estilo bottom-sheet com handle bar
-5. **Footer**: "POWERED BY TOQLER" discreto
-6. **Animacoes**: framer-motion para fadeIn na foto, slideUp no card, fadeInUp escalonado nas secoes
+### 1. Remover controles obsoletos
+Os selects de "Layout", "Botoes", "Fonte" e "Fundo" serao removidos, pois o novo design tem estilo fixo (Playfair Display + DM Sans, fundo off-white, cards brancos, accent verde-limao).
+
+### 2. Atualizar secoes visiveis
+Substituir os toggles atuais por toggles que correspondem as secoes reais do novo cartao:
+- Cabecalho da empresa (logo + tagline)
+- Botao Salvar Contato
+- Formulario de lead (Trocar Contato)
+- Secao Bio
+- Secao Contato
+- Secao Social
+- Secao Video
+
+Isso requer adicionar novas colunas na tabela `profile_layouts`: `show_bio`, `show_contact`, `show_social`, `show_video`.
+
+### 3. Reescrever o preview
+O preview lateral sera recriado como uma versao miniatura fiel do novo design do cartao:
+- Hero photo (aspect 4/3.2) com overlay
+- Card body sobreposto com nome em serif, cargo uppercase
+- Brand row (logo + tagline)
+- CTAs em grid 2 colunas (Salvar Contato / Trocar Contato)
+- Secoes: Bio, Contato, Social (grid 4 cols), Video
+- Footer "Powered by Toqler"
+
+### 4. Atualizar PublicProfile para respeitar os novos toggles
+O `PublicProfile.tsx` sera atualizado para ler os novos flags (`show_bio`, `show_contact`, `show_social`, `show_video`) e esconder/mostrar as secoes correspondentes.
 
 ## Detalhes tecnicos
 
-### Fonte Playfair Display
-Adicionar Playfair Display ao Google Fonts em `index.html` e registrar como `font-display` no `tailwind.config.ts`.
+### Migracao SQL
 
-**`index.html`**: Adicionar `Playfair+Display:wght@400;500;600;700` ao link do Google Fonts.
-
-**`tailwind.config.ts`**: Adicionar `display: ['Playfair Display', 'serif']` em `fontFamily`.
-
-### Componente PublicProfile.tsx — Reescrita completa
-
-O componente sera reescrito mantendo toda a logica existente (fetch de dados, tracking, lead submit, vCard, webhooks) mas com JSX e estilos totalmente novos.
-
-**Estrutura do JSX:**
-
-```text
-Container (max-w-[430px], bg #f5f4f0, centralizado)
-  |-- Hero Section (aspect-[4/3.2], overflow-hidden)
-  |     |-- img (object-cover)
-  |     |-- overlay gradient
-  |
-  |-- Card Body (bg-white, rounded-t-2xl, -mt-6, relative z-10)
-  |     |-- Nome (font-display, text-4xl)
-  |     |-- Cargo (uppercase, tracking-widest)
-  |     |-- Brand Row (logo + tagline, border-b)
-  |     |-- CTA Row (grid-cols-2)
-  |           |-- Salvar Contato (outline)
-  |           |-- Trocar Contato (accent #D4E84B)
-  |
-  |-- Sections (px-6, space-y-3)
-  |     |-- Bio card
-  |     |-- Contact card (phone, email, website, location)
-  |     |-- Social card (grid 4 cols: LinkedIn, Instagram, X, WhatsApp)
-  |     |-- Video card (iframe YouTube/Vimeo)
-  |
-  |-- Footer ("POWERED BY TOQLER")
-  |
-  |-- Drawer (vaul) — formulario de lead
-        |-- Handle bar
-        |-- Titulo "Trocar Contato" (serif)
-        |-- Descricao
-        |-- Campos: Nome, Email, Telefone
-        |-- Checkbox LGPD
-        |-- Botao "Enviar Contato" (accent)
-        |-- Feedback de sucesso com auto-close
+```sql
+ALTER TABLE public.profile_layouts
+  ADD COLUMN IF NOT EXISTS show_bio boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_contact boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_social boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS show_video boolean NOT NULL DEFAULT true;
 ```
-
-### Mapeamento de dados do banco
-
-| Elemento | Campo |
-|---|---|
-| Hero photo | `profile.photo_url` |
-| Nome | `profile.name` |
-| Cargo | `profile.role_title` + `company.name` |
-| Logo | `company.logo_url` |
-| Bio | `profile.bio` |
-| Telefone | `profile.whatsapp` |
-| Website | `profile.website` |
-| LinkedIn | `profile.linkedin` |
-| Instagram | `profile.instagram` |
-| Video | `profile.video_url` |
-
-### Cores do novo design
-
-- Fundo pagina: `#f5f4f0` (via inline style na pagina publica, nao altera o tema global)
-- Card branco: `#ffffff`
-- Accent CTA: `#D4E84B` (verde-limao Toqler, via inline style)
-- Texto primario: `#1a1a1a`
-- Texto secundario: `#6b6b6b`
-- Bordas: `#e8e8e5`
-
-Estas cores sao aplicadas localmente apenas na pagina publica para manter a identidade do cartao independente do design system do dashboard.
-
-### Animacoes (framer-motion)
-
-- Hero photo: opacity 0->1 + scale 1.05->1, duracao 0.8s, delay 0.2s
-- Card body: translateY 20->0 + opacity, 0.6s, delay 0.3s
-- CTA row: translateY + opacity, delay 0.5s
-- Secoes: fadeInUp escalonado (delays 0.6s, 0.7s, 0.8s, 0.9s)
-
-### Drawer (vaul) para formulario de lead
-
-Substituir o formulario inline pelo componente Drawer ja instalado. O botao "Trocar Contato" abre o drawer como bottom-sheet. Conteudo:
-- Handle bar
-- Titulo serif
-- Campos com labels uppercase
-- Checkbox LGPD
-- Botao submit accent
-- Ao submeter com sucesso: mostrar icone de check + "Contato enviado!" e fechar apos 2.5s
-
-### Funcionalidades preservadas
-
-- Tracking de views e cliques (eventos)
-- Download de vCard
-- Envio de leads com webhooks
-- Respeito as configuracoes de layout (show_save_contact, show_lead_form, etc.)
-- Branding condicional (hide_branding)
-- Video embed seguro (YouTube/Vimeo)
 
 ### Arquivos alterados
 
-1. `index.html` — adicionar Playfair Display ao Google Fonts
-2. `tailwind.config.ts` — adicionar fontFamily `display`
-3. `src/pages/PublicProfile.tsx` — reescrita completa do JSX com novo design
+1. **Migracao SQL** — adicionar 4 colunas novas
+2. **`src/pages/DashboardAppearance.tsx`** — reescrita completa:
+   - Remover card "Estilo" (Layout/Botoes/Fonte/Fundo)
+   - Atualizar card "Secoes visiveis" com os 7 toggles
+   - Manter card "Ordem dos CTAs" (ordem dos icones sociais)
+   - Reescrever preview para espelhar o novo design premium
+   - Atualizar payload de save com as novas colunas
+3. **`src/pages/PublicProfile.tsx`** — adicionar leitura dos novos flags para mostrar/esconder Bio, Contato, Social e Video
 
-Nenhuma alteracao no banco de dados necessaria.
+### Preview — estrutura visual (miniatura)
+
+```text
++----------------------------+
+|  [Hero Photo 4/3.2]       |
+|  + overlay gradiente       |
++----------------------------+
+|  Card Body (rounded-t)     |
+|  Nome (serif)              |
+|  CARGO UPPERCASE           |
+|  Logo ---- tagline         |
+|  ─────────────────────     |
+|  [Salvar] [Trocar]         |
++----------------------------+
+|  Bio card                  |
++----------------------------+
+|  Contato card              |
++----------------------------+
+|  Social grid (4 cols)      |
++----------------------------+
+|  Video                     |
++----------------------------+
+|  Powered by Toqler         |
++----------------------------+
+```
+
+Cada secao no preview respeita o toggle correspondente — ao desligar uma secao no editor, ela desaparece do preview em tempo real.
+
+### Funcionalidades preservadas
+- Salvar/atualizar layout no banco
+- Selecionar perfil para preview
+- Ordem dos CTAs sociais
+- Compatibilidade com colunas existentes (show_company_header, show_save_contact, show_lead_form)
 
