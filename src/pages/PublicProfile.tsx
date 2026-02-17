@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/drawer";
 import {
   User,
-  MessageCircle,
   Instagram,
   Linkedin,
   Globe,
@@ -29,6 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { motion } from "framer-motion";
 
 /* ── Helpers ── */
@@ -86,7 +86,7 @@ const fadeInUp = (delay: number) => ({ hidden: { opacity: 0, y: 12 }, visible: {
 const SOCIAL_ITEMS = [
   { key: "linkedin", label: "LinkedIn", icon: Linkedin, url: (v: string) => v.startsWith("http") ? v : `https://linkedin.com/in/${v}` },
   { key: "instagram", label: "Instagram", icon: Instagram, url: (v: string) => `https://instagram.com/${v.replace("@", "")}` },
-  { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, url: (v: string) => `https://wa.me/${v.replace(/\D/g, "")}` },
+  { key: "whatsapp", label: "WhatsApp", icon: WhatsAppIcon, url: (v: string) => `https://wa.me/${v.replace(/\D/g, "")}` },
   { key: "website", label: "Website", icon: Globe, url: (v: string) => v.startsWith("http") ? v : `https://${v}` },
 ] as const;
 

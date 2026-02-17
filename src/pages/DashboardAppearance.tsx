@@ -7,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Loader2, Save, GripVertical, User, MessageCircle, Instagram, Linkedin, Globe, Download, Send,
+  Loader2, Save, GripVertical, User, Instagram, Linkedin, Globe, Download, Send,
   Phone, Mail,
 } from "lucide-react";
 import { toast } from "sonner";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 
 /* ── CTA / Social config ── */
-const CTA_ICONS: Record<string, any> = { whatsapp: MessageCircle, instagram: Instagram, linkedin: Linkedin, website: Globe };
+const CTA_ICONS: Record<string, any> = { whatsapp: WhatsAppIcon, instagram: Instagram, linkedin: Linkedin, website: Globe };
 const CTA_LABELS: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", linkedin: "LinkedIn", website: "Website" };
 
 /* ── Design tokens (matches PublicProfile) ── */
