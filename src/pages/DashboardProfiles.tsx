@@ -15,7 +15,7 @@ import type { Profile } from "@/types/entities";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-const emptyForm = { name: "", role_title: "", bio: "", whatsapp: "", instagram: "", linkedin: "", website: "", video_url: "" };
+const emptyForm = { name: "", role_title: "", bio: "", email: "", whatsapp: "", instagram: "", linkedin: "", website: "", video_url: "" };
 
 export default function DashboardProfiles() {
   const { companyId } = useAuth();
@@ -56,6 +56,7 @@ export default function DashboardProfiles() {
       name: p.name || "",
       role_title: p.role_title || "",
       bio: p.bio || "",
+      email: (p as any).email || "",
       whatsapp: p.whatsapp || "",
       instagram: p.instagram || "",
       linkedin: p.linkedin || "",
@@ -173,6 +174,7 @@ export default function DashboardProfiles() {
             <div className="space-y-2"><Label>Nome *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
             <div className="space-y-2"><Label>Cargo</Label><Input value={form.role_title} onChange={(e) => setForm({ ...form, role_title: e.target.value })} /></div>
             <div className="space-y-2"><Label>Bio</Label><Textarea value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={3} /></div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nome@empresa.com" /></div>
             <div className="space-y-2"><Label>URL do vídeo</Label><Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="https://youtube.com/..." /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></div>

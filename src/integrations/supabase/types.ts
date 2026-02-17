@@ -24,6 +24,7 @@ export type Database = {
           name: string
           primary_color: string | null
           slug: string | null
+          tagline: string | null
           updated_at: string
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           name: string
           primary_color?: string | null
           slug?: string | null
+          tagline?: string | null
           updated_at?: string
         }
         Update: {
@@ -46,6 +48,7 @@ export type Database = {
           name?: string
           primary_color?: string | null
           slug?: string | null
+          tagline?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -408,6 +411,7 @@ export type Database = {
           company_id: string
           cover_url: string | null
           created_at: string
+          email: string | null
           id: string
           instagram: string | null
           linkedin: string | null
@@ -426,6 +430,7 @@ export type Database = {
           company_id: string
           cover_url?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           instagram?: string | null
           linkedin?: string | null
@@ -444,6 +449,7 @@ export type Database = {
           company_id?: string
           cover_url?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           instagram?: string | null
           linkedin?: string | null
