@@ -271,9 +271,8 @@ export default function DashboardAppearance() {
                         {ctaOrder.map((key) => {
                           const Icon = CTA_ICONS[key] || Globe;
                           return (
-                            <div key={key} className="flex flex-col items-center gap-1 py-2 rounded" style={{ background: T.bg }}>
+                            <div key={key} className="flex items-center justify-center py-2 rounded" style={{ background: T.bg }}>
                               <Icon className="w-3.5 h-3.5" style={{ color: T.text1 }} />
-                              <span className="text-[6px] uppercase tracking-wider" style={{ color: T.text2 }}>{CTA_LABELS[key]}</span>
                             </div>
                           );
                         })}
