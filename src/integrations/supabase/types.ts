@@ -339,11 +339,15 @@ export type Database = {
       }
       profile_layouts: {
         Row: {
+          accent_color: string
           background_style: string
+          bg_color: string
           button_style: string
+          card_color: string
           company_id: string
           created_at: string
           cta_order: Json
+          font_family: string
           font_style: string
           id: string
           layout_style: string
@@ -355,14 +359,19 @@ export type Database = {
           show_social: boolean
           show_stats_row: boolean
           show_video: boolean
+          text_color: string
           updated_at: string
         }
         Insert: {
+          accent_color?: string
           background_style?: string
+          bg_color?: string
           button_style?: string
+          card_color?: string
           company_id: string
           created_at?: string
           cta_order?: Json
+          font_family?: string
           font_style?: string
           id?: string
           layout_style?: string
@@ -374,14 +383,19 @@ export type Database = {
           show_social?: boolean
           show_stats_row?: boolean
           show_video?: boolean
+          text_color?: string
           updated_at?: string
         }
         Update: {
+          accent_color?: string
           background_style?: string
+          bg_color?: string
           button_style?: string
+          card_color?: string
           company_id?: string
           created_at?: string
           cta_order?: Json
+          font_family?: string
           font_style?: string
           id?: string
           layout_style?: string
@@ -393,6 +407,7 @@ export type Database = {
           show_social?: boolean
           show_stats_row?: boolean
           show_video?: boolean
+          text_color?: string
           updated_at?: string
         }
         Relationships: [
