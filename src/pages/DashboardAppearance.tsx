@@ -300,7 +300,7 @@ export default function DashboardAppearance() {
 
                   <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
                   }
-                  <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 100%)" }} />
+                  <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)` }} />
                 </div>
 
                 {/* Card body */}
