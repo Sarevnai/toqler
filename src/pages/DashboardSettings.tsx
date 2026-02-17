@@ -99,13 +99,14 @@ export default function DashboardSettings() {
       const path = `companies/${companyId}/logo.${ext}`;
       const { error } = await supabase.storage.from("assets").upload(path, logoFile, { upsert: true });
       if (error) { toast.error("Erro ao enviar logo"); setSaving(false); return; }
-      logo_url = `${SUPABASE_URL}/storage/v1/object/public/assets/${path}`;
+      logo_url = `${SUPABASE_URL}/storage/v1/object/public/assets/${path}?t=${Date.now()}`;
     }
 
     const { error } = await supabase.from("companies").update({ ...form, logo_url }).eq("id", companyId);
     setSaving(false);
     if (error) { toast.error("Erro ao salvar"); return; }
     setLogoFile(null);
+    setCompany(prev => prev ? { ...prev, ...form, logo_url } : null);
     toast.success("Configurações salvas!");
   };
 
