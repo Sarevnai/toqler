@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, ArrowLeft, Users, Eye, MousePointerClick, UserPlus, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { formatCurrency, STATUS_COLORS, STATUS_LABELS } from "@/lib/billing-utils";
 
 interface CompanyDetail {
   company: any;
@@ -16,6 +17,7 @@ interface CompanyDetail {
   cards: any[];
   members: any[];
   integrations: any[];
+  subscription: any;
   stats: {
     total_leads: number;
     total_views: number;
@@ -67,7 +69,7 @@ export default function AdminCustomerDetail() {
     );
   }
 
-  const { company, profiles, cards, members, integrations, stats } = data;
+  const { company, profiles, cards, members, integrations, subscription, stats } = data;
 
   const statCards = [
     { label: "Total de Leads", value: stats.total_leads, icon: Users },
@@ -117,6 +119,31 @@ export default function AdminCustomerDetail() {
           </motion.div>
         ))}
       </div>
+
+      {/* Subscription card */}
+      {subscription && (
+        <Card>
+          <CardContent className="p-5">
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">Assinatura</h3>
+            <div className="flex flex-wrap items-center gap-4">
+              <div>
+                <p className="text-lg font-bold text-foreground">{subscription.plan_name}</p>
+                <p className="text-sm text-muted-foreground">{formatCurrency(subscription.price_monthly)}/mês</p>
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[subscription.status] || ""}`}>
+                {STATUS_LABELS[subscription.status] || subscription.status}
+              </span>
+              <div className="text-sm text-muted-foreground capitalize">{subscription.billing_cycle === "monthly" ? "Mensal" : "Anual"}</div>
+              <div className="text-xs text-muted-foreground">
+                {new Date(subscription.current_period_start).toLocaleDateString("pt-BR")} → {new Date(subscription.current_period_end).toLocaleDateString("pt-BR")}
+              </div>
+              {subscription.stripe_subscription_id && (
+                <Badge variant="outline" className="font-mono text-[10px]">{subscription.stripe_subscription_id}</Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="profiles">
         <TabsList>

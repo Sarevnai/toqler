@@ -159,6 +159,48 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          applicable_plans: string[] | null
+          code: string
+          created_at: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          uses_count: number | null
+          valid_until: string | null
+        }
+        Insert: {
+          applicable_plans?: string[] | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          uses_count?: number | null
+          valid_until?: string | null
+        }
+        Update: {
+          applicable_plans?: string[] | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          uses_count?: number | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           card_id: string | null
@@ -299,6 +341,69 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          due_date: string
+          id: string
+          invoice_pdf_url: string | null
+          paid_at: string | null
+          status: string
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          invoice_pdf_url?: string | null
+          paid_at?: string | null
+          status?: string
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          invoice_pdf_url?: string | null
+          paid_at?: string | null
+          status?: string
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           card_id: string | null
@@ -410,6 +515,121 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          invoice_id: string
+          metadata: Json | null
+          method: string | null
+          status: string
+          stripe_payment_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          invoice_id: string
+          metadata?: Json | null
+          method?: string | null
+          status?: string
+          stripe_payment_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          invoice_id?: string
+          metadata?: Json | null
+          method?: string | null
+          status?: string
+          stripe_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_features: {
+        Row: {
+          feature_key: string
+          feature_value: string
+          id: string
+          plan_id: string
+        }
+        Insert: {
+          feature_key: string
+          feature_value: string
+          id?: string
+          plan_id: string
+        }
+        Update: {
+          feature_key?: string
+          feature_value?: string
+          id?: string
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_features_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+          slug: string
+          sort_order: number | null
+          trial_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          slug: string
+          sort_order?: number | null
+          trial_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          slug?: string
+          sort_order?: number | null
+          trial_days?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       platform_notifications: {
         Row: {
@@ -607,6 +827,134 @@ export type Database = {
           },
         ]
       }
+      subscription_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          new_plan_id: string | null
+          old_plan_id: string | null
+          subscription_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          new_plan_id?: string | null
+          old_plan_id?: string | null
+          subscription_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          new_plan_id?: string | null
+          old_plan_id?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_new_plan_id_fkey"
+            columns: ["new_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_old_plan_id_fkey"
+            columns: ["old_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          billing_cycle: string
+          cancel_reason: string | null
+          canceled_at: string | null
+          company_id: string
+          coupon_id: string | null
+          created_at: string | null
+          current_period_end: string
+          current_period_start: string
+          id: string
+          plan_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_cycle?: string
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          company_id: string
+          coupon_id?: string | null
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_cycle?: string
+          cancel_reason?: string | null
+          canceled_at?: string | null
+          company_id?: string
+          coupon_id?: string | null
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -620,6 +968,7 @@ export type Database = {
         Args: { _name: string }
         Returns: string
       }
+      get_admin_billing_kpis: { Args: never; Returns: Json }
       get_admin_companies: {
         Args: { _limit?: number; _offset?: number; _search?: string }
         Returns: Json
@@ -627,6 +976,16 @@ export type Database = {
       get_admin_company_detail: { Args: { _company_id: string }; Returns: Json }
       get_admin_growth_chart: { Args: never; Returns: Json }
       get_admin_kpis: { Args: never; Returns: Json }
+      get_admin_subscriptions: {
+        Args: {
+          _limit?: number
+          _offset?: number
+          _plan_slug?: string
+          _search?: string
+          _status?: string
+        }
+        Returns: Json
+      }
       get_cta_distribution: { Args: { _company_id: string }; Returns: Json }
       get_daily_chart: { Args: { _company_id: string }; Returns: Json }
       get_dashboard_kpis: { Args: { _company_id: string }; Returns: Json }
