@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import type { Profile, DashboardKpis, DailyChartPoint } from "@/types/entities";
+import PlanBanner from "@/components/dashboard/PlanBanner";
 
 export default function DashboardOverview() {
   const { companyId } = useAuth();
@@ -57,6 +58,8 @@ export default function DashboardOverview() {
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">Visão geral da sua empresa</p>
       </div>
+
+      <PlanBanner />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

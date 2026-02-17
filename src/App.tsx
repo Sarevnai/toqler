@@ -31,6 +31,10 @@ const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
 const AdminCustomerDetail = lazy(() => import("./pages/admin/AdminCustomerDetail"));
 const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminPlans = lazy(() => import("./pages/admin/AdminPlans"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
+const AdminInvoices = lazy(() => import("./pages/admin/AdminInvoices"));
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 
 const queryClient = new QueryClient();
 
@@ -71,6 +75,10 @@ const App = () => (
                   <Route path="customers/:companyId" element={<AdminCustomerDetail />} />
                   <Route path="notifications" element={<AdminNotifications />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="plans" element={<AdminPlans />} />
+                  <Route path="subscriptions" element={<AdminSubscriptions />} />
+                  <Route path="invoices" element={<AdminInvoices />} />
+                  <Route path="coupons" element={<AdminCoupons />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

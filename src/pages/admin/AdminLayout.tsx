@@ -17,13 +17,20 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Building2, Bell, Settings, LogOut, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Building2, Bell, Settings, LogOut, ArrowLeft, Package, Receipt, FileText, Ticket } from "lucide-react";
 
 const menuItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin" },
   { label: "Empresas", icon: Building2, path: "/admin/customers" },
   { label: "Notificações", icon: Bell, path: "/admin/notifications" },
   { label: "Configurações", icon: Settings, path: "/admin/settings" },
+];
+
+const billingItems = [
+  { label: "Planos", icon: Package, path: "/admin/plans" },
+  { label: "Assinaturas", icon: Receipt, path: "/admin/subscriptions" },
+  { label: "Faturas", icon: FileText, path: "/admin/invoices" },
+  { label: "Cupons", icon: Ticket, path: "/admin/coupons" },
 ];
 
 function AdminSidebar() {
@@ -52,6 +59,32 @@ function AdminSidebar() {
                       <NavLink
                         to={item.path}
                         end={item.path === "/admin"}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                            isActive
+                              ? "bg-zinc-700 text-white font-medium"
+                              : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                          }`
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Financeiro</p>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {billingItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.path}
                         className={({ isActive }) =>
                           `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                             isActive
