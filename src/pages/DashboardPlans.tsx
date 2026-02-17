@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Check, X, Crown, Zap, Building2 } from "lucide-react";
+import { Check, X, Crown, Zap, Building2, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency, FEATURE_LABELS } from "@/lib/billing-utils";
+import { getStripePriceId } from "@/lib/stripe-plans";
 import { motion } from "framer-motion";
+import { useSearchParams } from "react-router-dom";
 
 interface PlanWithFeatures {
   id: string;
@@ -45,11 +47,42 @@ const FEATURE_ORDER = [
 
 export default function DashboardPlans() {
   const { companyId } = useAuth();
+  const [searchParams] = useSearchParams();
   const [plans, setPlans] = useState<PlanWithFeatures[]>([]);
   const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string | null>(null);
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  // Handle checkout result from URL params
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") {
+      toast.success("Assinatura realizada com sucesso! Seu plano será atualizado em instantes.");
+      // Trigger subscription check to sync
+      supabase.functions.invoke("check-subscription").then(() => {
+        // Refetch subscription data
+        fetchSubscription();
+      });
+    } else if (checkout === "canceled") {
+      toast.info("Checkout cancelado. Você pode tentar novamente quando quiser.");
+    }
+  }, [searchParams]);
+
+  const fetchSubscription = async () => {
+    if (!companyId) return;
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("status, plans(slug)")
+      .eq("company_id", companyId)
+      .maybeSingle();
+    if (sub) {
+      setCurrentPlanSlug((sub.plans as any)?.slug || null);
+      setCurrentStatus(sub.status);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,18 +106,7 @@ export default function DashboardPlans() {
         );
       }
 
-      if (companyId) {
-        const { data: sub } = await supabase
-          .from("subscriptions")
-          .select("status, plans(slug)")
-          .eq("company_id", companyId)
-          .maybeSingle();
-        if (sub) {
-          setCurrentPlanSlug((sub.plans as any)?.slug || null);
-          setCurrentStatus(sub.status);
-        }
-      }
-
+      await fetchSubscription();
       setLoading(false);
     };
 
@@ -101,22 +123,69 @@ export default function DashboardPlans() {
   };
 
   const isCurrentPlan = (slug: string) => currentPlanSlug === slug;
+  const isPaidPlan = currentPlanSlug && currentPlanSlug !== "free";
 
-  const handleSelectPlan = (plan: PlanWithFeatures) => {
+  const handleSelectPlan = async (plan: PlanWithFeatures) => {
     if (isCurrentPlan(plan.slug)) return;
-    toast.info("Integração de pagamento em breve! Entre em contato para mudar de plano.");
+    if (plan.slug === "free") {
+      toast.info("Para fazer downgrade para o plano Free, gerencie sua assinatura.");
+      return;
+    }
+
+    const cycle = yearly ? "yearly" : "monthly";
+    const priceId = getStripePriceId(plan.slug, cycle as "monthly" | "yearly");
+    if (!priceId) {
+      toast.error("Preço não encontrado para este plano.");
+      return;
+    }
+
+    setCheckoutLoading(plan.slug);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId, planSlug: plan.slug, billingCycle: cycle },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+      toast.error("Erro ao iniciar checkout. Tente novamente.");
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      } else {
+        throw new Error("No portal URL returned");
+      }
+    } catch (err: any) {
+      console.error("Portal error:", err);
+      toast.error("Erro ao abrir portal de gerenciamento. Verifique se você possui uma assinatura ativa.");
+    } finally {
+      setPortalLoading(false);
+    }
   };
 
   const yearlySavings = (plan: PlanWithFeatures) => {
     if (plan.price_monthly === 0) return 0;
-    const monthlyTotal = plan.price_monthly * 12;
-    return monthlyTotal - plan.price_yearly;
+    return plan.price_monthly * 12 - plan.price_yearly;
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -146,6 +215,16 @@ export default function DashboardPlans() {
         )}
       </div>
 
+      {/* Manage subscription button for paid users */}
+      {isPaidPlan && (
+        <div className="text-center">
+          <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+            {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ExternalLink className="h-4 w-4 mr-2" />}
+            Gerenciar assinatura
+          </Button>
+        </div>
+      )}
+
       {/* Plan cards */}
       <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {plans.map((plan, i) => {
@@ -154,6 +233,7 @@ export default function DashboardPlans() {
           const price = yearly ? plan.price_yearly : plan.price_monthly;
           const savings = yearlySavings(plan);
           const isPopular = plan.slug === "pro";
+          const isCheckingOut = checkoutLoading === plan.slug;
 
           return (
             <motion.div
@@ -183,7 +263,6 @@ export default function DashboardPlans() {
                 </CardHeader>
 
                 <CardContent className="flex-1 flex flex-col">
-                  {/* Price */}
                   <div className="text-center mb-6">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-4xl font-bold text-card-foreground">
@@ -206,7 +285,6 @@ export default function DashboardPlans() {
                     )}
                   </div>
 
-                  {/* Features */}
                   <ul className="space-y-3 flex-1 mb-6">
                     {FEATURE_ORDER.map((key) => {
                       const value = plan.features[key];
@@ -222,29 +300,28 @@ export default function DashboardPlans() {
                             <X className="h-4 w-4 mt-0.5 text-muted-foreground/40 shrink-0" />
                           )}
                           <span className={isIncluded ? "text-card-foreground" : "text-muted-foreground/50"}>
-                            {typeof formatted === "string"
-                              ? `${label}: ${formatted}`
-                              : label}
+                            {typeof formatted === "string" ? `${label}: ${formatted}` : label}
                           </span>
                         </li>
                       );
                     })}
                   </ul>
 
-                  {/* CTA */}
                   <Button
                     className="w-full"
                     variant={isCurrent ? "outline" : isPopular ? "default" : "outline"}
-                    disabled={isCurrent}
+                    disabled={isCurrent || isCheckingOut || !!checkoutLoading}
                     onClick={() => handleSelectPlan(plan)}
                   >
-                    {isCurrent
-                      ? currentStatus === "trial"
-                        ? "Em trial"
-                        : "Plano atual"
-                      : plan.price_monthly === 0
-                        ? "Começar grátis"
-                        : "Assinar agora"}
+                    {isCheckingOut ? (
+                      <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
+                    ) : isCurrent ? (
+                      currentStatus === "trial" ? "Em trial" : "Plano atual"
+                    ) : plan.price_monthly === 0 ? (
+                      "Começar grátis"
+                    ) : (
+                      "Assinar agora"
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -253,9 +330,8 @@ export default function DashboardPlans() {
         })}
       </div>
 
-      {/* FAQ / Info */}
       <div className="text-center text-sm text-muted-foreground max-w-lg mx-auto space-y-1">
-        <p>Precisa de um plano personalizado? <button className="text-primary underline" onClick={() => toast.info("Em breve!")}>Fale conosco</button></p>
+        <p>Precisa de um plano personalizado? <button className="text-primary underline" onClick={() => toast.info("Entre em contato pelo suporte!")}>Fale conosco</button></p>
         <p>Você pode mudar ou cancelar seu plano a qualquer momento.</p>
       </div>
     </div>
