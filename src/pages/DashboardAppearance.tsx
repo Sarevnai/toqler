@@ -254,7 +254,7 @@ export default function DashboardAppearance() {
                   {/* Brand row */}
                   {layout.show_company_header && company && (
                     <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-16 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
+                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-20 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
                       {company.tagline && <span className="text-[8px] italic" style={{ color: T.text2 }}>{company.tagline}</span>}
                     </div>
                   )}
