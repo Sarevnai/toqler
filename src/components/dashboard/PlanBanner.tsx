@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { differenceInDays } from "date-fns";
+import { Link } from "react-router-dom";
 
 interface SubInfo {
   status: string;
@@ -44,7 +45,7 @@ export default function PlanBanner() {
   let bgClass = "";
   let text = "";
   let actionLabel = "";
-  let actionFn = () => toast.info("Em breve!");
+  let actionLink = "/dashboard/plans";
 
   if (plan_slug === "free" && status === "active") {
     bgClass = "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800";
@@ -75,9 +76,11 @@ export default function PlanBanner() {
     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-3 ${bgClass}`}>
       <p className="text-sm font-medium text-foreground">{text}</p>
       {actionLabel && (
-        <Button variant="outline" size="sm" onClick={actionFn} className="shrink-0">
-          {actionLabel}
-        </Button>
+        <Link to={actionLink}>
+          <Button variant="outline" size="sm" className="shrink-0">
+            {actionLabel}
+          </Button>
+        </Link>
       )}
     </div>
   );
