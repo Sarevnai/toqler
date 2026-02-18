@@ -37,7 +37,7 @@ export default function ColorInput({ label, value, onChange }: ColorInputProps) 
           type="color"
           value={hexForPicker}
           onChange={(e) => handlePickerChange(e.target.value)}
-          className="w-10 h-10 rounded-lg border border-input cursor-pointer p-0.5 bg-background"
+          className="w-10 h-10 rounded-full border border-input cursor-pointer bg-background appearance-none [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
         />
         <input
           type="text"
