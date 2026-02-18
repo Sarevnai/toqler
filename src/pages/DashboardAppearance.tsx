@@ -403,7 +403,7 @@ export default function DashboardAppearance() {
                   }
 
                   {layout.show_company_header && company &&
-                  <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+                  <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
                       {company.logo_url ? <img src={company.logo_url} alt="" className="h-20 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
                       {company.tagline && <span className="text-[8px] italic" style={{ color: T.text2 }}>{company.tagline}</span>}
                     </div>
@@ -411,7 +411,7 @@ export default function DashboardAppearance() {
 
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     {layout.show_save_contact &&
-                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.border}`, background: T.card, color: T.buttonText }}>
+                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.cardBorder}`, background: T.card, color: T.buttonText }}>
                         <Download className="w-3 h-3" /> Salvar
                       </div>
                     }

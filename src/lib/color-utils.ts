@@ -78,9 +78,11 @@ export function buildTokens(layout: {
   const buttonColor = layout?.button_color || layout?.accent_color || "#D4E84B";
   const buttonTextColor = layout?.button_text_color || "#1a1a1a";
 
+  const card = layout?.card_color || "#ffffff";
+
   return {
     bg: parseColorToHex(bg) || "#f5f4f0",
-    card: parseColorToHex(layout?.card_color || "#ffffff") || "#ffffff",
+    card: parseColorToHex(card) || "#ffffff",
     accent: parseColorToHex(layout?.accent_color || "#D4E84B") || "#D4E84B",
     accentHover: darken(layout?.accent_color || "#D4E84B", 15),
     button: parseColorToHex(buttonColor) || "#D4E84B",
@@ -90,5 +92,6 @@ export function buildTokens(layout: {
     text2: mix(text1, 0.55),
     text3: mix(text1, 0.7),
     border: darken(bg, 10),
+    cardBorder: darken(card, 18),
   };
 }

@@ -248,7 +248,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
 
           {/* Brand row */}
           {showCompanyHeader && company && (
-            <div className="flex items-center justify-between mt-5 pb-5 mb-0" style={{ borderBottom: `1px solid ${T.border}` }}>
+            <div className="flex items-center justify-between mt-5 pb-5 mb-0" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
               {company.logo_url ? <img src={company.logo_url} alt={company.name} className="h-20 opacity-85" /> : <span className="text-sm font-medium" style={{ color: T.text2 }}>{company.name}</span>}
               {company.tagline && <span className="text-[0.8rem] italic" style={{ color: T.text2 }}>{company.tagline}</span>}
             </div>
@@ -260,7 +260,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
               <button
                 onClick={generateVCard}
                 className="flex items-center justify-center gap-2.5 py-4 px-5 rounded-xl text-[0.85rem] font-semibold transition-all active:scale-[0.97]"
-                style={{ background: T.card, color: T.buttonText, border: `1.5px solid ${T.border}` }}
+                style={{ background: T.card, color: T.buttonText, border: `1.5px solid ${T.cardBorder}` }}
               >
                 <Download className="w-[18px] h-[18px]" />
                 Salvar Contato
@@ -299,9 +299,9 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                           <label className="block text-xs font-semibold uppercase tracking-[0.08em] mb-1.5" style={{ color: T.text2 }}>Nome</label>
                           <input
                             className="w-full py-3.5 px-4 rounded-lg text-[0.9rem] outline-none transition-colors"
-                            style={{ background: T.bg, border: `1.5px solid ${T.border}`, color: T.text1 }}
+                            style={{ background: T.bg, border: `1.5px solid ${T.cardBorder}`, color: T.text1 }}
                             onFocus={(e) => (e.currentTarget.style.borderColor = T.accent)}
-                            onBlur={(e) => (e.currentTarget.style.borderColor = T.border)}
+                            onBlur={(e) => (e.currentTarget.style.borderColor = T.cardBorder)}
                             placeholder="Seu nome completo"
                             value={leadForm.name}
                             onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
@@ -313,9 +313,9 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                           <input
                             type="email"
                             className="w-full py-3.5 px-4 rounded-lg text-[0.9rem] outline-none transition-colors"
-                            style={{ background: T.bg, border: `1.5px solid ${T.border}`, color: T.text1 }}
+                            style={{ background: T.bg, border: `1.5px solid ${T.cardBorder}`, color: T.text1 }}
                             onFocus={(e) => (e.currentTarget.style.borderColor = T.accent)}
-                            onBlur={(e) => (e.currentTarget.style.borderColor = T.border)}
+                            onBlur={(e) => (e.currentTarget.style.borderColor = T.cardBorder)}
                             placeholder="seu@email.com"
                             value={leadForm.email}
                             onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
@@ -326,9 +326,9 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                           <label className="block text-xs font-semibold uppercase tracking-[0.08em] mb-1.5" style={{ color: T.text2 }}>Telefone</label>
                           <input
                             className="w-full py-3.5 px-4 rounded-lg text-[0.9rem] outline-none transition-colors"
-                            style={{ background: T.bg, border: `1.5px solid ${T.border}`, color: T.text1 }}
+                            style={{ background: T.bg, border: `1.5px solid ${T.cardBorder}`, color: T.text1 }}
                             onFocus={(e) => (e.currentTarget.style.borderColor = T.accent)}
-                            onBlur={(e) => (e.currentTarget.style.borderColor = T.border)}
+                            onBlur={(e) => (e.currentTarget.style.borderColor = T.cardBorder)}
                             placeholder="+55 11 99999-9999"
                             value={leadForm.phone}
                             onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
