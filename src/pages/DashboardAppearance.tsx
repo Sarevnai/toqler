@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Loader2, Save, GripVertical, User, Globe, Download, Send,
-  Phone, Mail } from
+  Phone, Mail, Upload, X, ImageIcon } from
 "lucide-react";
 import { toast } from "sonner";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
@@ -36,10 +36,12 @@ const FONT_OPTIONS = [
 
 /* ── Color field definitions ── */
 const COLOR_FIELDS = [
-{ key: "accent_color", label: "Cor de acento", description: "Botões e destaques" },
+{ key: "accent_color", label: "Cor de acento", description: "Destaques gerais" },
 { key: "bg_color", label: "Cor de fundo", description: "Background da página" },
 { key: "card_color", label: "Cor dos cards", description: "Cards de bio, contato, social" },
-{ key: "text_color", label: "Cor do texto", description: "Textos principais e títulos" }] as
+{ key: "text_color", label: "Cor do texto", description: "Textos principais e títulos" },
+{ key: "button_color", label: "Cor dos botões", description: "Background dos botões CTA" },
+{ key: "button_text_color", label: "Cor do texto dos botões", description: "Texto dentro dos botões" }] as
 const;
 
 /* ── Section toggle definitions ── */
@@ -71,7 +73,11 @@ const defaultLayout = {
   bg_color: "#f5f4f0",
   card_color: "#ffffff",
   text_color: "#1a1a1a",
-  font_family: "Inter"
+  font_family: "Inter",
+  button_color: "#D4E84B",
+  button_text_color: "#1a1a1a",
+  cover_url: null as string | null,
+  bg_image_url: null as string | null
 };
 
 export default function DashboardAppearance() {
@@ -83,6 +89,8 @@ export default function DashboardAppearance() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [layoutId, setLayoutId] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
 
   useEffect(() => {
     if (!companyId) return;
@@ -143,7 +151,11 @@ export default function DashboardAppearance() {
         bg_color: layout.bg_color,
         card_color: layout.card_color,
         text_color: layout.text_color,
-        font_family: layout.font_family
+        font_family: layout.font_family,
+        button_color: layout.button_color,
+        button_text_color: layout.button_text_color,
+        cover_url: layout.cover_url || null,
+        bg_image_url: layout.bg_image_url || null
       };
 
       if (company) {
@@ -173,8 +185,24 @@ export default function DashboardAppearance() {
     [order[index], order[newIndex]] = [order[newIndex], order[index]];
     setLayout({ ...layout, cta_order: order });
   };
+  const handleImageUpload = async (file: File, field: "cover_url" | "bg_image_url") => {
+    if (!companyId) return;
+    const setter = field === "cover_url" ? setUploadingCover : setUploadingBg;
+    setter(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${companyId}/${field}_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+    if (error) { toast.error("Erro ao fazer upload"); setter(false); return; }
+    const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
+    setLayout({ ...layout, [field]: urlData.publicUrl });
+    setter(false);
+  };
 
-  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  const removeImage = (field: "cover_url" | "bg_image_url") => {
+    setLayout({ ...layout, [field]: null });
+  };
+
+
 
   const ctaOrder = layout.cta_order as string[];
   const p = previewProfile;
@@ -271,6 +299,58 @@ export default function DashboardAppearance() {
             </CardContent>
           </Card>
 
+          {/* Cover photo */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Foto de Capa</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">Imagem de banner no topo do perfil (substitui a foto do perfil no hero)</p>
+              {layout.cover_url ? (
+                <div className="relative rounded-lg overflow-hidden">
+                  <img src={layout.cover_url} alt="Capa" className="w-full h-32 object-cover" />
+                  <button onClick={() => removeImage("cover_url")} className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center h-24 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                  {uploadingCover ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : (
+                    <>
+                      <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Clique para fazer upload</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "cover_url"); }} />
+                </label>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Background image */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Imagem de Fundo</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">Textura ou imagem de fundo com overlay para legibilidade</p>
+              {layout.bg_image_url ? (
+                <div className="relative rounded-lg overflow-hidden">
+                  <img src={layout.bg_image_url} alt="Fundo" className="w-full h-24 object-cover" />
+                  <button onClick={() => removeImage("bg_image_url")} className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center h-24 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                  {uploadingBg ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : (
+                    <>
+                      <ImageIcon className="h-5 w-5 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Clique para fazer upload</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "bg_image_url"); }} />
+                </label>
+              )}
+            </CardContent>
+          </Card>
+
           <Button onClick={handleSave} disabled={saving} className="gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Salvar aparência
@@ -292,20 +372,29 @@ export default function DashboardAppearance() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="rounded-b-lg overflow-hidden" style={{ background: T.bg, fontFamily: layout.font_family }}>
+              <div className="rounded-b-lg overflow-hidden relative" style={{ background: T.bg, fontFamily: layout.font_family }}>
+                {/* BG image overlay */}
+                {layout.bg_image_url && (
+                  <>
+                    <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${layout.bg_image_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                    <div className="absolute inset-0 z-0" style={{ background: T.bg, opacity: 0.85 }} />
+                  </>
+                )}
                 {/* Hero */}
-                <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
-                  {p?.photo_url ?
-                  <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} /> :
-
-                  <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
-                  }
+                <div className="relative z-[1] w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
+                  {layout.cover_url ? (
+                    <img src={layout.cover_url} alt="" className="w-full h-full object-cover" />
+                  ) : p?.photo_url ? (
+                    <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
+                  )}
                   <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)` }} />
                   <div className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 20%, transparent 100%)` }} />
                 </div>
 
                 {/* Card body */}
-                <div className="relative z-10 -mt-4 rounded-2xl pt-5 pb-3 px-[25px] mx-[16px] mb-[17px] py-0 my-[34px]" style={{ background: T.card }}>
+                <div className="relative z-10 -mt-4 rounded-2xl pt-5 pb-3 px-[25px] mx-[16px] mb-[17px] py-0 my-[34px]" style={{ background: T.card, position: "relative", zIndex: 1 }}>
                   <h2 className="font-display text-xl font-semibold leading-tight" style={{ color: T.text1 }}>{p?.name || "Nome do perfil"}</h2>
                   {p?.role_title &&
                   <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.text2 }}>
@@ -322,12 +411,12 @@ export default function DashboardAppearance() {
 
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     {layout.show_save_contact &&
-                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.border}`, color: T.text1 }}>
+                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.border}`, background: T.card, color: T.buttonText }}>
                         <Download className="w-3 h-3" /> Salvar
                       </div>
                     }
                     {layout.show_lead_form &&
-                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ background: T.accent, color: T.text1 }}>
+                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ background: T.button, color: T.buttonText }}>
                         <Send className="w-3 h-3" /> Trocar
                       </div>
                     }
@@ -335,7 +424,7 @@ export default function DashboardAppearance() {
                 </div>
 
                 {/* Sections */}
-                <div className="px-3 pb-4 space-y-2" style={{ background: T.bg }}>
+                <div className="relative z-[1] px-3 pb-4 space-y-2" style={{ background: layout.bg_image_url ? "transparent" : T.bg }}>
                   {layout.show_bio && p?.bio &&
                   <div className="rounded-lg p-3 shadow-sm" style={{ background: T.card }}>
                       <p className="text-[9px] font-bold mb-1" style={{ color: T.text1 }}>Minha Bio</p>

@@ -42,6 +42,8 @@ export function buildTokens(layout: {
   bg_color?: string;
   card_color?: string;
   text_color?: string;
+  button_color?: string;
+  button_text_color?: string;
 }) {
   const text1 = layout?.text_color || "#1a1a1a";
   const bg = layout?.bg_color || "#f5f4f0";
@@ -73,11 +75,17 @@ export function buildTokens(layout: {
     );
   };
 
+  const buttonColor = layout?.button_color || layout?.accent_color || "#D4E84B";
+  const buttonTextColor = layout?.button_text_color || "#1a1a1a";
+
   return {
     bg: parseColorToHex(bg) || "#f5f4f0",
     card: parseColorToHex(layout?.card_color || "#ffffff") || "#ffffff",
     accent: parseColorToHex(layout?.accent_color || "#D4E84B") || "#D4E84B",
     accentHover: darken(layout?.accent_color || "#D4E84B", 15),
+    button: parseColorToHex(buttonColor) || "#D4E84B",
+    buttonHover: darken(buttonColor, 15),
+    buttonText: parseColorToHex(buttonTextColor) || "#1a1a1a",
     text1: parseColorToHex(text1) || "#1a1a1a",
     text2: mix(text1, 0.55),
     text3: mix(text1, 0.7),
