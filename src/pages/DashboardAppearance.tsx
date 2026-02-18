@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Loader2, Save, GripVertical, User, Globe, Download, Send,
-  Phone, Mail, Upload, X, ImageIcon } from
+  Phone, Mail, Upload, X, ImageIcon, ChevronDown } from
 "lucide-react";
 import { toast } from "sonner";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
@@ -32,17 +33,6 @@ const FONT_OPTIONS = [
 { value: "DM Sans", label: "DM Sans" },
 { value: "Playfair Display", label: "Playfair Display" },
 { value: "JetBrains Mono", label: "JetBrains Mono" }];
-
-
-/* ── Color field definitions ── */
-const COLOR_FIELDS = [
-{ key: "accent_color", label: "Cor de acento", description: "Destaques gerais" },
-{ key: "bg_color", label: "Cor de fundo", description: "Background da página" },
-{ key: "card_color", label: "Cor dos cards", description: "Cards de bio, contato, social" },
-{ key: "text_color", label: "Cor do texto", description: "Textos principais e títulos" },
-{ key: "button_color", label: "Cor dos botões", description: "Background dos botões CTA" },
-{ key: "button_text_color", label: "Cor do texto dos botões", description: "Texto dentro dos botões" }] as
-const;
 
 /* ── Section toggle definitions ── */
 const SECTION_TOGGLES: [string, string][] = [
@@ -76,9 +66,27 @@ const defaultLayout = {
   font_family: "Inter",
   button_color: "#D4E84B",
   button_text_color: "#1a1a1a",
+  icon_bg_color: "#f5f4f0",
+  icon_color: "#1a1a1a",
   cover_url: null as string | null,
   bg_image_url: null as string | null
 };
+
+/* ── Collapsible Section helper ── */
+function BrandSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger className="flex w-full items-center justify-between py-2 text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors">
+        {title}
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 pt-1 pb-3">
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 export default function DashboardAppearance() {
   const { companyId } = useAuth();
@@ -154,6 +162,8 @@ export default function DashboardAppearance() {
         font_family: layout.font_family,
         button_color: layout.button_color,
         button_text_color: layout.button_text_color,
+        icon_bg_color: layout.icon_bg_color,
+        icon_color: layout.icon_color,
         cover_url: layout.cover_url || null,
         bg_image_url: layout.bg_image_url || null
       };
@@ -202,8 +212,6 @@ export default function DashboardAppearance() {
     setLayout({ ...layout, [field]: null });
   };
 
-
-
   const ctaOrder = layout.cta_order as string[];
   const p = previewProfile;
   const T = buildTokens(layout);
@@ -218,21 +226,78 @@ export default function DashboardAppearance() {
       <div className="grid lg:grid-cols-[1fr_380px] gap-6">
         {/* ── Editor controls ── */}
         <div className="space-y-4">
-          {/* Brand Kit */}
+          {/* Brand Kit - 5 collapsible sections */}
           <Card>
             <CardHeader><CardTitle className="text-base">Kit de Marca</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {COLOR_FIELDS.map(({ key, label, description }) =>
-              <div key={key}>
-                  <ColorInput
-                  label={label}
-                  value={layout[key]}
-                  onChange={(hex) => setLayout({ ...layout, [key]: hex })} />
+            <CardContent className="space-y-1">
+              {/* 1. Fundo */}
+              <BrandSection title="Fundo" defaultOpen>
+                <ColorInput label="Cor de fundo" value={layout.bg_color} onChange={(hex) => setLayout({ ...layout, bg_color: hex })} />
+                <p className="text-xs text-muted-foreground">Background da página</p>
+                {/* Background image inline */}
+                <Label className="text-sm">Imagem de fundo</Label>
+                <p className="text-xs text-muted-foreground">Textura ou imagem com overlay para legibilidade</p>
+                {layout.bg_image_url ? (
+                  <div className="relative rounded-lg overflow-hidden">
+                    <img src={layout.bg_image_url} alt="Fundo" className="w-full h-24 object-cover" />
+                    <button onClick={() => removeImage("bg_image_url")} className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-20 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                    {uploadingBg ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : (
+                      <>
+                        <ImageIcon className="h-5 w-5 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Clique para fazer upload</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "bg_image_url"); }} />
+                  </label>
+                )}
+              </BrandSection>
 
-                  <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-                </div>
-              )}
+              <div className="border-t border-border" />
 
+              {/* 2. Cards */}
+              <BrandSection title="Cards">
+                <ColorInput label="Cor dos cards" value={layout.card_color} onChange={(hex) => setLayout({ ...layout, card_color: hex })} />
+                <p className="text-xs text-muted-foreground">Cards de bio, contato, social</p>
+              </BrandSection>
+
+              <div className="border-t border-border" />
+
+              {/* 3. Botões (ícones) */}
+              <BrandSection title="Botões (ícones)">
+                <ColorInput label="Cor de fundo dos ícones" value={layout.icon_bg_color} onChange={(hex) => setLayout({ ...layout, icon_bg_color: hex })} />
+                <p className="text-xs text-muted-foreground">Fundo dos ícones de contato e redes sociais</p>
+                <ColorInput label="Cor dos ícones" value={layout.icon_color} onChange={(hex) => setLayout({ ...layout, icon_color: hex })} />
+                <p className="text-xs text-muted-foreground">Cor dos ícones em si</p>
+              </BrandSection>
+
+              <div className="border-t border-border" />
+
+              {/* 4. CTA */}
+              <BrandSection title="CTA">
+                <ColorInput label="Cor dos botões CTA" value={layout.button_color} onChange={(hex) => setLayout({ ...layout, button_color: hex })} />
+                <p className="text-xs text-muted-foreground">Fundo dos botões Salvar/Trocar Contato</p>
+                <ColorInput label="Cor do texto CTA" value={layout.button_text_color} onChange={(hex) => setLayout({ ...layout, button_text_color: hex })} />
+                <p className="text-xs text-muted-foreground">Texto dentro dos botões</p>
+              </BrandSection>
+
+              <div className="border-t border-border" />
+
+              {/* 5. Textos */}
+              <BrandSection title="Textos">
+                <ColorInput label="Cor do texto" value={layout.text_color} onChange={(hex) => setLayout({ ...layout, text_color: hex })} />
+                <p className="text-xs text-muted-foreground">Textos principais e títulos</p>
+                <ColorInput label="Cor de acento" value={layout.accent_color} onChange={(hex) => setLayout({ ...layout, accent_color: hex })} />
+                <p className="text-xs text-muted-foreground">Destaques e acentos</p>
+              </BrandSection>
+
+              <div className="border-t border-border" />
+
+              {/* Font */}
               <div className="space-y-1.5 pt-2">
                 <Label className="text-sm">Fonte</Label>
                 <Select value={layout.font_family} onValueChange={(v) => setLayout({ ...layout, font_family: v })}>
@@ -260,7 +325,6 @@ export default function DashboardAppearance() {
                   value={company?.tagline || ""}
                   onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
                   placeholder="We connect. For real." />
-
               </div>
             </CardContent>
           </Card>
@@ -294,7 +358,6 @@ export default function DashboardAppearance() {
                       <Button variant="ghost" size="sm" disabled={i === ctaOrder.length - 1} onClick={() => moveCTA(i, "down")} className="h-7 w-7 p-0">↓</Button>
                     </div>
                   </div>);
-
               })}
             </CardContent>
           </Card>
@@ -303,7 +366,7 @@ export default function DashboardAppearance() {
           <Card>
             <CardHeader><CardTitle className="text-base">Foto de Capa</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground">Imagem de banner no topo do perfil (substitui a foto do perfil no hero)</p>
+              <p className="text-xs text-muted-foreground">Banner no topo do perfil, atrás da foto de perfil</p>
               {layout.cover_url ? (
                 <div className="relative rounded-lg overflow-hidden">
                   <img src={layout.cover_url} alt="Capa" className="w-full h-32 object-cover" />
@@ -320,32 +383,6 @@ export default function DashboardAppearance() {
                     </>
                   )}
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "cover_url"); }} />
-                </label>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Background image */}
-          <Card>
-            <CardHeader><CardTitle className="text-base">Imagem de Fundo</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground">Textura ou imagem de fundo com overlay para legibilidade</p>
-              {layout.bg_image_url ? (
-                <div className="relative rounded-lg overflow-hidden">
-                  <img src={layout.bg_image_url} alt="Fundo" className="w-full h-24 object-cover" />
-                  <button onClick={() => removeImage("bg_image_url")} className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center h-24 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
-                  {uploadingBg ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : (
-                    <>
-                      <ImageIcon className="h-5 w-5 text-muted-foreground mb-1" />
-                      <span className="text-xs text-muted-foreground">Clique para fazer upload</span>
-                    </>
-                  )}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "bg_image_url"); }} />
                 </label>
               )}
             </CardContent>
@@ -380,21 +417,39 @@ export default function DashboardAppearance() {
                     <div className="absolute inset-0 z-0" style={{ background: T.bg, opacity: 0.85 }} />
                   </>
                 )}
-                {/* Hero */}
-                <div className="relative z-[1] w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
-                  {layout.cover_url ? (
-                    <img src={layout.cover_url} alt="" className="w-full h-full object-cover" />
-                  ) : p?.photo_url ? (
-                    <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
-                  )}
-                  <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)` }} />
-                  <div className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 20%, transparent 100%)` }} />
-                </div>
+
+                {/* Hero - Cover + Profile Photo */}
+                {layout.cover_url ? (
+                  <>
+                    {/* Cover banner */}
+                    <div className="relative z-[1] w-full overflow-hidden" style={{ aspectRatio: "16 / 7" }}>
+                      <img src={layout.cover_url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    {/* Profile photo overlapping */}
+                    <div className="relative z-[2] flex justify-center -mt-10">
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 shadow-lg" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
+                        {p?.photo_url ? (
+                          <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><User className="h-8 w-8" style={{ color: T.text3 }} /></div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="relative z-[1] w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
+                    {p?.photo_url ? (
+                      <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)` }} />
+                    <div className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 20%, transparent 100%)` }} />
+                  </div>
+                )}
 
                 {/* Card body */}
-                <div className="relative z-10 -mt-4 rounded-2xl pt-5 pb-3 px-[25px] mx-[16px] mb-[17px] py-0 my-[34px]" style={{ background: T.card, position: "relative", zIndex: 1 }}>
+                <div className={`relative z-10 rounded-2xl pt-5 pb-3 px-[25px] mx-[16px] mb-[17px] py-0 my-[34px] ${layout.cover_url ? "mt-3" : "-mt-4"}`} style={{ background: T.card, position: "relative", zIndex: 1 }}>
                   <h2 className="font-display text-xl font-semibold leading-tight" style={{ color: T.text1 }}>{p?.name || "Nome do perfil"}</h2>
                   {p?.role_title &&
                   <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: T.text2 }}>
@@ -438,13 +493,13 @@ export default function DashboardAppearance() {
                       <div className="flex flex-col gap-1.5">
                         {p?.whatsapp &&
                       <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Phone className="w-3 h-3" style={{ color: T.text1 }} /></div>
+                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.iconBg }}><Phone className="w-3 h-3" style={{ color: T.iconColor }} /></div>
                             <span className="text-[8px]" style={{ color: T.text2 }}>{p.whatsapp}</span>
                           </div>
                       }
                         {p?.email &&
                       <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.bg }}><Mail className="w-3 h-3" style={{ color: T.text1 }} /></div>
+                            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: T.iconBg }}><Mail className="w-3 h-3" style={{ color: T.iconColor }} /></div>
                             <span className="text-[8px]" style={{ color: T.text2 }}>{p.email}</span>
                           </div>
                       }
@@ -459,10 +514,9 @@ export default function DashboardAppearance() {
                         {ctaOrder.filter((key) => p?.[key]).map((key) => {
                         const Icon = CTA_ICONS[key] || Globe;
                         return (
-                          <div key={key} className="flex items-center justify-center py-2 rounded" style={{ background: T.bg }}>
-                              <Icon className="w-[18px] h-[18px]" style={{ color: T.text1 }} />
+                          <div key={key} className="flex items-center justify-center py-2 rounded" style={{ background: T.iconBg }}>
+                              <Icon className="w-[18px] h-[18px]" style={{ color: T.iconColor }} />
                             </div>);
-
                       })}
                       </div>
                     </div>
