@@ -666,9 +666,13 @@ export type Database = {
           accent_color: string
           background_style: string
           bg_color: string
+          bg_image_url: string | null
+          button_color: string
           button_style: string
+          button_text_color: string
           card_color: string
           company_id: string
+          cover_url: string | null
           created_at: string
           cta_order: Json
           font_family: string
@@ -690,9 +694,13 @@ export type Database = {
           accent_color?: string
           background_style?: string
           bg_color?: string
+          bg_image_url?: string | null
+          button_color?: string
           button_style?: string
+          button_text_color?: string
           card_color?: string
           company_id: string
+          cover_url?: string | null
           created_at?: string
           cta_order?: Json
           font_family?: string
@@ -714,9 +722,13 @@ export type Database = {
           accent_color?: string
           background_style?: string
           bg_color?: string
+          bg_image_url?: string | null
+          button_color?: string
           button_style?: string
+          button_text_color?: string
           card_color?: string
           company_id?: string
+          cover_url?: string | null
           created_at?: string
           cta_order?: Json
           font_family?: string

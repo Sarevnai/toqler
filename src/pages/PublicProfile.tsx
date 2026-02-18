@@ -185,6 +185,8 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
     bg_color: layout?.bg_color || DEFAULT_TOKENS.bg_color,
     card_color: layout?.card_color || DEFAULT_TOKENS.card_color,
     text_color: layout?.text_color || DEFAULT_TOKENS.text_color,
+    button_color: layout?.button_color,
+    button_text_color: layout?.button_text_color,
   });
   const fontFamily = layout?.font_family || "Inter";
 
@@ -212,12 +214,21 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
   ].filter(Boolean) as { icon: any; label: string; value: string; href: string }[];
 
   return (
-    <div className="min-h-screen flex justify-center items-start" style={{ background: T.bg, fontFamily }}>
-      <div className="w-full max-w-[430px] min-h-screen" style={{ background: T.bg, fontFamily }}>
+    <div className="min-h-screen flex justify-center items-start relative" style={{ background: T.bg, fontFamily }}>
+      {/* Background image */}
+      {layout?.bg_image_url && (
+        <>
+          <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${layout.bg_image_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+          <div className="absolute inset-0 z-0" style={{ background: T.bg, opacity: 0.85 }} />
+        </>
+      )}
+      <div className="w-full max-w-[430px] min-h-screen relative z-[1]" style={{ fontFamily }}>
 
         {/* ── Hero ── */}
         <motion.div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }} variants={fadeInPhoto} initial="hidden" animate="visible">
-          {profile.photo_url ? (
+          {layout?.cover_url ? (
+            <img src={layout.cover_url} alt="Capa" className="w-full h-full object-cover" />
+          ) : profile.photo_url ? (
             <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover" style={{ objectPosition: `${(profile as any).photo_offset_x ?? 50}% ${(profile as any).photo_offset_y ?? 30}%` }} />
           ) : (
             <div className="w-full h-full flex items-center justify-center"><User className="h-24 w-24" style={{ color: T.text3 }} /></div>
@@ -249,7 +260,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
               <button
                 onClick={generateVCard}
                 className="flex items-center justify-center gap-2.5 py-4 px-5 rounded-xl text-[0.85rem] font-semibold transition-all active:scale-[0.97]"
-                style={{ background: T.card, color: T.text1, border: `1.5px solid ${T.border}` }}
+                style={{ background: T.card, color: T.buttonText, border: `1.5px solid ${T.border}` }}
               >
                 <Download className="w-[18px] h-[18px]" />
                 Salvar Contato
@@ -260,9 +271,9 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                 <DrawerTrigger asChild>
                   <button
                     className="flex items-center justify-center gap-2.5 py-4 px-5 rounded-xl text-[0.85rem] font-semibold transition-all active:scale-[0.97]"
-                    style={{ background: T.accent, color: T.text1, border: "1.5px solid transparent" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = T.accentHover)}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = T.accent)}
+                    style={{ background: T.button, color: T.buttonText, border: "1.5px solid transparent" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = T.buttonHover)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = T.button)}
                   >
                     <Send className="w-[18px] h-[18px]" />
                     Trocar Contato
@@ -333,7 +344,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                           type="submit"
                           disabled={submitting || !leadForm.consent}
                           className="w-full py-4 rounded-xl text-[0.9rem] font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50 active:scale-[0.97]"
-                          style={{ background: T.accent, color: T.text1 }}
+                          style={{ background: T.button, color: T.buttonText }}
                         >
                           {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                           Enviar Contato
@@ -348,7 +359,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
         </motion.div>
 
         {/* ── Sections ── */}
-        <div className="px-6 pb-10" style={{ background: T.bg }}>
+        <div className="px-6 pb-10">
 
           {/* Bio */}
           {showBio && profile.bio && (
@@ -414,7 +425,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
 
         {/* ── Footer ── */}
         {!hideBranding && (
-          <motion.div className="text-center py-6 pb-12" style={{ background: T.bg }} variants={fadeInUp(1.0)} initial="hidden" animate="visible">
+          <motion.div className="text-center py-6 pb-12" variants={fadeInUp(1.0)} initial="hidden" animate="visible">
             <a href="/" className="inline-flex items-center gap-1.5 text-[0.7rem] uppercase tracking-[0.06em] transition-colors" style={{ color: T.text3 }}>
               Powered by Toqler
             </a>
