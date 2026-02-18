@@ -44,6 +44,8 @@ export function buildTokens(layout: {
   text_color?: string;
   button_color?: string;
   button_text_color?: string;
+  icon_bg_color?: string;
+  icon_color?: string;
 }) {
   const text1 = layout?.text_color || "#1a1a1a";
   const bg = layout?.bg_color || "#f5f4f0";
@@ -80,6 +82,9 @@ export function buildTokens(layout: {
 
   const card = layout?.card_color || "#ffffff";
 
+  const iconBgRaw = layout?.icon_bg_color || bg;
+  const iconColorRaw = layout?.icon_color || text1;
+
   return {
     bg: parseColorToHex(bg) || "#f5f4f0",
     card: parseColorToHex(card) || "#ffffff",
@@ -93,5 +98,7 @@ export function buildTokens(layout: {
     text3: mix(text1, 0.7),
     border: darken(bg, 10),
     cardBorder: darken(card, 18),
+    iconBg: parseColorToHex(iconBgRaw) || "#f5f4f0",
+    iconColor: parseColorToHex(iconColorRaw) || "#1a1a1a",
   };
 }

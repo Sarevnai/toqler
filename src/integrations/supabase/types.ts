@@ -677,6 +677,8 @@ export type Database = {
           cta_order: Json
           font_family: string
           font_style: string
+          icon_bg_color: string
+          icon_color: string
           id: string
           layout_style: string
           show_bio: boolean
@@ -705,6 +707,8 @@ export type Database = {
           cta_order?: Json
           font_family?: string
           font_style?: string
+          icon_bg_color?: string
+          icon_color?: string
           id?: string
           layout_style?: string
           show_bio?: boolean
@@ -733,6 +737,8 @@ export type Database = {
           cta_order?: Json
           font_family?: string
           font_style?: string
+          icon_bg_color?: string
+          icon_color?: string
           id?: string
           layout_style?: string
           show_bio?: boolean

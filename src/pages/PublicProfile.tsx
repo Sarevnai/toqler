@@ -187,6 +187,8 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
     text_color: layout?.text_color || DEFAULT_TOKENS.text_color,
     button_color: layout?.button_color,
     button_text_color: layout?.button_text_color,
+    icon_bg_color: layout?.icon_bg_color,
+    icon_color: layout?.icon_color,
   });
   const fontFamily = layout?.font_family || "Inter";
 
@@ -205,6 +207,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
   const hideBranding = company?.hide_branding;
 
   const availableSocials = SOCIAL_ITEMS.filter((s) => profile[s.key]);
+  const hasCover = !!layout?.cover_url;
 
   /* ── Contact items ── */
   const contactItems = [
@@ -225,20 +228,37 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
       <div className="w-full max-w-[430px] min-h-screen relative z-[1]" style={{ fontFamily }}>
 
         {/* ── Hero ── */}
-        <motion.div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }} variants={fadeInPhoto} initial="hidden" animate="visible">
-          {layout?.cover_url ? (
-            <img src={layout.cover_url} alt="Capa" className="w-full h-full object-cover" />
-          ) : profile.photo_url ? (
-            <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover" style={{ objectPosition: `${(profile as any).photo_offset_x ?? 50}% ${(profile as any).photo_offset_y ?? 30}%` }} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center"><User className="h-24 w-24" style={{ color: T.text3 }} /></div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)` }} />
-          <div className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 20%, transparent 100%)` }} />
-        </motion.div>
+        {hasCover ? (
+          <>
+            {/* Cover banner */}
+            <motion.div className="relative w-full overflow-hidden" style={{ aspectRatio: "16 / 7" }} variants={fadeInPhoto} initial="hidden" animate="visible">
+              <img src={layout.cover_url} alt="Capa" className="w-full h-full object-cover" />
+            </motion.div>
+            {/* Profile photo as overlapping card */}
+            <motion.div className="relative z-10 flex justify-center -mt-14" variants={slideUp(0.2)} initial="hidden" animate="visible">
+              <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 shadow-xl" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
+                {profile.photo_url ? (
+                  <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover" style={{ objectPosition: `${(profile as any).photo_offset_x ?? 50}% ${(profile as any).photo_offset_y ?? 30}%` }} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center"><User className="h-12 w-12" style={{ color: T.text3 }} /></div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        ) : (
+          <motion.div className="relative w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }} variants={fadeInPhoto} initial="hidden" animate="visible">
+            {profile.photo_url ? (
+              <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover" style={{ objectPosition: `${(profile as any).photo_offset_x ?? 50}% ${(profile as any).photo_offset_y ?? 30}%` }} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center"><User className="h-24 w-24" style={{ color: T.text3 }} /></div>
+            )}
+            <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)` }} />
+            <div className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 20%, transparent 100%)` }} />
+          </motion.div>
+        )}
 
         {/* ── Card Body ── */}
-        <motion.div className="relative z-10 -mt-4 rounded-2xl pt-5 pb-3 px-6 mx-4 mb-5" style={{ background: T.card }} variants={slideUp(0.3)} initial="hidden" animate="visible">
+        <motion.div className={`relative z-10 rounded-2xl pt-5 pb-3 px-6 mx-4 mb-5 ${hasCover ? "mt-3" : "-mt-4"}`} style={{ background: T.card }} variants={slideUp(0.3)} initial="hidden" animate="visible">
           <h1 className="font-display text-4xl font-semibold leading-tight -tracking-wide" style={{ color: T.text1 }}>{profile.name}</h1>
           {profile.role_title && (
             <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em]" style={{ color: T.text2 }}>
@@ -376,8 +396,8 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
               <div className="flex flex-col gap-3.5">
                 {contactItems.map((item) => (
                   <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3.5 group" onClick={() => trackCTA(item.label.toLowerCase())}>
-                    <div className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 transition-colors" style={{ background: T.bg }}>
-                      <item.icon className="w-[18px] h-[18px]" style={{ color: T.text1 }} />
+                    <div className="w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 transition-colors" style={{ background: T.iconBg }}>
+                      <item.icon className="w-[18px] h-[18px]" style={{ color: T.iconColor }} />
                     </div>
                     <div>
                       <p className="text-[0.7rem] uppercase tracking-[0.08em] font-medium" style={{ color: T.text3 }}>{item.label}</p>
@@ -402,9 +422,9 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                     rel="noopener noreferrer"
                     onClick={() => trackCTA(s.key)}
                     className="flex flex-col items-center gap-2 py-4 px-2 rounded-lg transition-all hover:-translate-y-0.5 active:scale-95"
-                    style={{ background: T.bg }}
+                    style={{ background: T.iconBg }}
                   >
-                    <s.icon className="w-[22px] h-[22px]" style={{ color: T.text1 }} />
+                    <s.icon className="w-[22px] h-[22px]" style={{ color: T.iconColor }} />
                   </a>
                 ))}
               </div>
