@@ -1,57 +1,69 @@
 
-## Sistema de Enquadramento de Foto do Perfil
 
-### Problema
-Hoje a foto do perfil usa `object-cover` com posicao fixa `object-[center_20%]`. Se o usuario sobe uma foto onde o rosto esta em outra posicao, o resultado fica ruim e nao ha como ajustar.
+## Cores de botao independentes + Foto de capa + Fundo com imagem
 
-### Solucao
-Adicionar um controle de enquadramento (pan/drag) no editor de perfil que permite ao usuario reposicionar a foto dentro do frame. Simples, visual e intuitivo.
+### 1. Problema atual
 
-### Como vai funcionar
+- Os botoes usam `accent_color` (Trocar) e `card_color` (Salvar) como background, sem controle independente
+- Nao existe opcao de foto de capa no layout
+- O fundo e sempre uma cor solida, sem opcao de imagem
 
-1. **No editor de perfil (DashboardProfiles)**: Ao selecionar uma foto, o usuario ve um preview do frame (aspect ratio 4/3.2) e pode arrastar a imagem para posicionar o rosto onde quiser
-2. **Dica educativa**: Um texto sutil orienta o usuario sobre o melhor tipo de foto (vertical, boa iluminacao, rosto visivel)
-3. **Posicao salva no banco**: Dois campos novos `photo_offset_x` e `photo_offset_y` (0-100, representando a porcentagem do `object-position`)
-4. **Perfil publico e preview**: Usam os valores salvos em vez do fixo `center 20%`
+### 2. Solucao
 
-### Detalhes tecnicos
+Tres novas funcionalidades no editor de aparencia:
 
-**1. Migracao no banco de dados**
+**A) Cor dos botoes separada**: Dois novos campos de cor (`button_color` e `button_text_color`) para controlar os botoes CTA independentemente do fundo e dos cards.
 
-Adicionar duas colunas na tabela `profiles`:
-- `photo_offset_x` (integer, default 50) -- posicao horizontal em %
-- `photo_offset_y` (integer, default 30) -- posicao vertical em % (30% como padrao pois rostos costumam estar no terco superior)
+**B) Foto de capa**: Upload de uma imagem de capa que aparece no topo do perfil (area hero), podendo ser usada em vez da foto individual do perfil ou como complemento visual.
 
-**2. Componente PhotoFrameEditor (novo)**
+**C) Fundo com imagem**: Opcao de substituir a cor de fundo solida por uma imagem de fundo (com overlay para manter legibilidade).
 
-Arquivo: `src/components/dashboard/PhotoFrameEditor.tsx`
+### 3. Alteracoes no banco de dados
 
-- Exibe a foto dentro de um container com aspect ratio 4/3.2 (mesmo do perfil publico)
-- Permite arrastar (mousedown/mousemove/touchstart/touchmove) para reposicionar
-- Mostra um indicador visual de "arraste para ajustar"
-- Retorna os valores `offsetX` e `offsetY` via callback
+Nova migracao adicionando colunas na tabela `profile_layouts`:
 
-**3. Alteracoes em DashboardProfiles.tsx**
+- `button_color` (text, default `'#D4E84B'`) -- cor de fundo dos botoes
+- `button_text_color` (text, default `'#1a1a1a'`) -- cor do texto dos botoes
+- `cover_url` (text, nullable) -- URL da foto de capa
+- `bg_image_url` (text, nullable) -- URL da imagem de fundo
 
-- Substituir o preview circular simples pelo `PhotoFrameEditor` quando ha foto selecionada
-- Adicionar `photo_offset_x` e `photo_offset_y` ao form state
-- Salvar os offsets junto com os outros dados do perfil
-- Adicionar dica educativa: "Use uma foto vertical com boa iluminacao e rosto visivel para melhor resultado"
+### 4. Alteracoes em `color-utils.ts`
 
-**4. Alteracoes em PublicProfile.tsx**
+Adicionar `button` e `buttonText` ao objeto retornado por `buildTokens()`, usando os novos campos ou fallback para `accent_color`.
 
-- Ler `photo_offset_x` e `photo_offset_y` do perfil
-- Aplicar como `object-position: {x}% {y}%` na tag img (substituindo o fixo `center_20%`)
+### 5. Alteracoes em `DashboardAppearance.tsx`
 
-**5. Alteracoes em DashboardAppearance.tsx**
+**Editor (lado esquerdo):**
 
-- Mesma logica: usar os offsets salvos no preview da aparencia
+- Adicionar dois novos `ColorInput` no Kit de Marca: "Cor dos botoes" e "Cor do texto dos botoes"
+- Adicionar secao "Foto de capa" com upload de imagem (usando storage bucket `assets`)
+- Adicionar secao "Imagem de fundo" com upload de imagem e toggle para ativar/desativar
+- Salvar os novos campos no payload
 
-### Experiencia do usuario
+**Preview (lado direito):**
 
-1. Usuario clica "Adicionar foto" no editor de perfil
-2. Seleciona a imagem
-3. Ve um preview realista do frame com a dica "Arraste para ajustar o enquadramento"
-4. Arrasta a foto ate o rosto ficar bem posicionado
-5. Salva o perfil -- posicao fica guardada
-6. Perfil publico exibe a foto na posicao escolhida
+- Botao "Salvar" usa `T.button` com borda e `T.buttonText` para o texto
+- Botao "Trocar" usa `T.button` como background e `T.buttonText` para o texto
+- Se `cover_url` existir, exibir no hero
+- Se `bg_image_url` existir, usar como background da pagina com overlay semi-transparente
+
+### 6. Alteracoes em `PublicProfile.tsx`
+
+- Botoes CTA usam `T.button` e `T.buttonText` em vez de `T.accent`/`T.text1`
+- Se layout tiver `cover_url`, exibir como hero (ou sobrepor ao hero existente)
+- Se layout tiver `bg_image_url`, aplicar como `background-image` no container com overlay
+
+### 7. Arquivos alterados
+
+1. **Migracao SQL** -- 4 novas colunas em `profile_layouts`
+2. **`src/lib/color-utils.ts`** -- Novos tokens `button` e `buttonText` em `buildTokens()`
+3. **`src/pages/DashboardAppearance.tsx`** -- Novos controles no editor + preview atualizado
+4. **`src/pages/PublicProfile.tsx`** -- Botoes e fundo usando novos tokens/imagens
+5. **`src/integrations/supabase/types.ts`** -- Atualizado automaticamente apos migracao
+
+### 8. Detalhes de UX
+
+- Foto de capa: o usuario faz upload de uma imagem que aparece como banner no topo do perfil. Se nao tiver foto de capa, o comportamento atual (foto do perfil como hero) se mantem.
+- Imagem de fundo: o usuario faz upload de uma textura/pattern/foto. Ela e exibida com um overlay da `bg_color` com opacidade (~85%) para manter legibilidade.
+- Cores dos botoes: preview atualiza em tempo real conforme o usuario muda as cores.
+
