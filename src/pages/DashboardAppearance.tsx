@@ -460,7 +460,7 @@ export default function DashboardAppearance() {
 
                   {layout.show_company_header && company &&
                    <div className="flex items-center justify-between gap-2 mt-3 pb-3" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
-                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-40 opacity-85 shrink-0" /> : <span className="text-[9px] font-medium shrink-0" style={{ color: T.text2 }}>{company.name}</span>}
+                      {company.logo_url ? <img src={company.logo_url} alt="" className="opacity-85 shrink-0" style={{ height: '100px' }} /> : <span className="text-[9px] font-medium shrink-0" style={{ color: T.text2 }}>{company.name}</span>}
                       {company.tagline && <span className="text-[8px] italic text-right whitespace-pre-line" style={{ color: T.text2 }}>{company.tagline}</span>}
                     </div>
                   }
