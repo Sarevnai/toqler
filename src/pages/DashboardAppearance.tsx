@@ -467,13 +467,13 @@ export default function DashboardAppearance() {
 
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     {layout.show_save_contact &&
-                    <div className="gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold px-[4px] my-0 mx-[47px] flex items-center justify-center" style={{ border: `1px solid ${T.cardBorder}`, background: T.card, color: T.buttonText }}>
-                        <Download className="w-3 h-3" />
+                    <div className="flex items-center justify-center py-2.5 rounded-lg" style={{ border: `1px solid ${T.cardBorder}`, background: T.card, color: T.buttonText }}>
+                        <Download className="w-4 h-4" />
                       </div>
                     }
                     {layout.show_lead_form &&
                     <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ background: T.button, color: T.buttonText }}>
-                        <Send className="w-3 h-3" /> Trocar
+                        <Send className="w-4 h-4" /> Trocar
                       </div>
                     }
                   </div>
