@@ -320,11 +320,12 @@ export default function DashboardAppearance() {
             <CardContent>
               <div className="space-y-2">
                 <Label>Texto da tagline</Label>
-                <input
-                  className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={company?.tagline || ""}
-                  onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
-                  placeholder="We connect. For real." />
+                <textarea
+                   className="flex min-h-[60px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                   rows={2}
+                   value={company?.tagline || ""}
+                   onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
+                   placeholder="We connect. For real." />
               </div>
             </CardContent>
           </Card>
@@ -458,9 +459,9 @@ export default function DashboardAppearance() {
                   }
 
                   {layout.show_company_header && company &&
-                  <div className="flex items-center justify-between mt-3 pb-3" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
-                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-20 opacity-85" /> : <span className="text-[9px] font-medium" style={{ color: T.text2 }}>{company.name}</span>}
-                      {company.tagline && <span className="text-[8px] italic" style={{ color: T.text2 }}>{company.tagline}</span>}
+                   <div className="flex items-center justify-between gap-2 mt-3 pb-3" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
+                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-20 opacity-85 shrink-0" /> : <span className="text-[9px] font-medium shrink-0" style={{ color: T.text2 }}>{company.name}</span>}
+                      {company.tagline && <span className="text-[8px] italic text-right whitespace-pre-line" style={{ color: T.text2 }}>{company.tagline}</span>}
                     </div>
                   }
 
