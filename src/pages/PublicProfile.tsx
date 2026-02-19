@@ -279,11 +279,10 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
             {showSaveContact && (
               <button
                 onClick={generateVCard}
-                className="flex items-center justify-center gap-2.5 py-4 px-5 rounded-xl text-[0.85rem] font-semibold transition-all active:scale-[0.97]"
+                className="flex items-center justify-center py-4 rounded-xl transition-all active:scale-[0.97]"
                 style={{ background: T.card, color: T.buttonText, border: `1.5px solid ${T.cardBorder}` }}
               >
-                <Download className="w-[18px] h-[18px]" />
-                Salvar Contato
+                <Download className="w-5 h-5" />
               </button>
             )}
             {showLeadForm && (
@@ -295,8 +294,8 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
                     onMouseEnter={(e) => (e.currentTarget.style.background = T.buttonHover)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = T.button)}
                   >
-                    <Send className="w-[18px] h-[18px]" />
-                    Trocar Contato
+                    <Send className="w-5 h-5" />
+                    Trocar
                   </button>
                 </DrawerTrigger>
                 <DrawerContent className="max-w-[430px] mx-auto" style={{ background: T.card }}>
