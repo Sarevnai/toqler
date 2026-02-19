@@ -269,7 +269,7 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
           {/* Brand row */}
           {showCompanyHeader && company && (
             <div className="flex items-center justify-between gap-4 mt-5 pb-5 mb-0" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
-              {company.logo_url ? <img src={company.logo_url} alt={company.name} className="h-40 opacity-85 shrink-0" /> : <span className="text-sm font-medium shrink-0" style={{ color: T.text2 }}>{company.name}</span>}
+              {company.logo_url ? <img src={company.logo_url} alt={company.name} className="opacity-85 shrink-0" style={{ height: '100px' }} /> : <span className="text-sm font-medium shrink-0" style={{ color: T.text2 }}>{company.name}</span>}
               {company.tagline && <span className="text-[0.8rem] italic text-right whitespace-pre-line" style={{ color: T.text2 }}>{company.tagline}</span>}
             </div>
           )}
