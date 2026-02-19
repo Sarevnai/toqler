@@ -235,12 +235,12 @@ export default function PublicProfile({ profileId: propProfileId }: { profileId?
               <img src={layout.cover_url} alt="Capa" className="w-full h-full object-cover" />
             </motion.div>
             {/* Profile photo as overlapping card */}
-            <motion.div className="relative z-10 flex justify-center -mt-14" variants={slideUp(0.2)} initial="hidden" animate="visible">
-              <div className="w-28 h-28 rounded-2xl overflow-hidden border-4 shadow-xl" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
+            <motion.div className="relative z-10 flex justify-center -mt-40" variants={slideUp(0.2)} initial="hidden" animate="visible">
+              <div className="w-80 h-80 rounded-2xl overflow-hidden border-4 shadow-xl" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
                 {profile.photo_url ? (
                   <img src={profile.photo_url} alt={profile.name} className="w-full h-full object-cover" style={{ objectPosition: `${(profile as any).photo_offset_x ?? 50}% ${(profile as any).photo_offset_y ?? 30}%` }} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center"><User className="h-12 w-12" style={{ color: T.text3 }} /></div>
+                  <div className="w-full h-full flex items-center justify-center"><User className="h-24 w-24" style={{ color: T.text3 }} /></div>
                 )}
               </div>
             </motion.div>

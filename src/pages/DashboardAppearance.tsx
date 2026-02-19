@@ -427,8 +427,8 @@ export default function DashboardAppearance() {
                       <img src={layout.cover_url} alt="" className="w-full h-full object-cover" />
                     </div>
                     {/* Profile photo overlapping */}
-                    <div className="relative z-[2] flex justify-center -mt-10">
-                      <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 shadow-lg" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
+                    <div className="relative z-[2] flex justify-center -mt-28">
+                      <div className="w-56 h-56 rounded-2xl overflow-hidden border-4 shadow-lg" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
                         {p?.photo_url ? (
                           <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} />
                         ) : (
