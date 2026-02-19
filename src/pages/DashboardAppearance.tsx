@@ -73,7 +73,7 @@ const defaultLayout = {
 };
 
 /* ── Collapsible Section helper ── */
-function BrandSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+function BrandSection({ title, defaultOpen = false, children }: {title: string;defaultOpen?: boolean;children: React.ReactNode;}) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -84,8 +84,8 @@ function BrandSection({ title, defaultOpen = false, children }: { title: string;
       <CollapsibleContent className="space-y-3 pt-1 pb-3">
         {children}
       </CollapsibleContent>
-    </Collapsible>
-  );
+    </Collapsible>);
+
 }
 
 export default function DashboardAppearance() {
@@ -202,7 +202,7 @@ export default function DashboardAppearance() {
     const ext = file.name.split(".").pop() || "jpg";
     const path = `${companyId}/${field}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
-    if (error) { toast.error("Erro ao fazer upload"); setter(false); return; }
+    if (error) {toast.error("Erro ao fazer upload");setter(false);return;}
     const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
     setLayout({ ...layout, [field]: urlData.publicUrl });
     setter(false);
@@ -237,24 +237,24 @@ export default function DashboardAppearance() {
                 {/* Background image inline */}
                 <Label className="text-sm">Imagem de fundo</Label>
                 <p className="text-xs text-muted-foreground">Textura ou imagem com overlay para legibilidade</p>
-                {layout.bg_image_url ? (
-                  <div className="relative rounded-lg overflow-hidden">
+                {layout.bg_image_url ?
+                <div className="relative rounded-lg overflow-hidden">
                     <img src={layout.bg_image_url} alt="Fundo" className="w-full h-24 object-cover" />
                     <button onClick={() => removeImage("bg_image_url")} className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background">
                       <X className="h-4 w-4" />
                     </button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center h-20 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
-                    {uploadingBg ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : (
-                      <>
+                  </div> :
+
+                <label className="flex flex-col items-center justify-center h-20 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                    {uploadingBg ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> :
+                  <>
                         <ImageIcon className="h-5 w-5 text-muted-foreground mb-1" />
                         <span className="text-xs text-muted-foreground">Clique para fazer upload</span>
                       </>
-                    )}
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "bg_image_url"); }} />
+                  }
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {const f = e.target.files?.[0];if (f) handleImageUpload(f, "bg_image_url");}} />
                   </label>
-                )}
+                }
               </BrandSection>
 
               <div className="border-t border-border" />
@@ -321,11 +321,11 @@ export default function DashboardAppearance() {
               <div className="space-y-2">
                 <Label>Texto da tagline</Label>
                 <textarea
-                   className="flex min-h-[60px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
-                   rows={2}
-                   value={company?.tagline || ""}
-                   onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
-                   placeholder="We connect. For real." />
+                  className="flex min-h-[60px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                  rows={2}
+                  value={company?.tagline || ""}
+                  onChange={(e) => setCompany({ ...company, tagline: e.target.value })}
+                  placeholder="We connect. For real." />
               </div>
             </CardContent>
           </Card>
@@ -368,24 +368,24 @@ export default function DashboardAppearance() {
             <CardHeader><CardTitle className="text-base">Foto de Capa</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <p className="text-xs text-muted-foreground">Banner no topo do perfil, atrás da foto de perfil</p>
-              {layout.cover_url ? (
-                <div className="relative rounded-lg overflow-hidden">
+              {layout.cover_url ?
+              <div className="relative rounded-lg overflow-hidden">
                   <img src={layout.cover_url} alt="Capa" className="w-full h-32 object-cover" />
                   <button onClick={() => removeImage("cover_url")} className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background">
                     <X className="h-4 w-4" />
                   </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center h-24 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
-                  {uploadingCover ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : (
-                    <>
+                </div> :
+
+              <label className="flex flex-col items-center justify-center h-24 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                  {uploadingCover ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> :
+                <>
                       <Upload className="h-5 w-5 text-muted-foreground mb-1" />
                       <span className="text-xs text-muted-foreground">Clique para fazer upload</span>
                     </>
-                  )}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "cover_url"); }} />
+                }
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {const f = e.target.files?.[0];if (f) handleImageUpload(f, "cover_url");}} />
                 </label>
-              )}
+              }
             </CardContent>
           </Card>
 
@@ -412,42 +412,42 @@ export default function DashboardAppearance() {
             <CardContent className="p-0">
               <div className="rounded-b-lg overflow-hidden relative" style={{ background: T.bg, fontFamily: layout.font_family }}>
                 {/* BG image overlay */}
-                {layout.bg_image_url && (
-                  <>
+                {layout.bg_image_url &&
+                <>
                     <div className="absolute inset-0 z-0" style={{ backgroundImage: `url(${layout.bg_image_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
                     <div className="absolute inset-0 z-0" style={{ background: T.bg, opacity: 0.85 }} />
                   </>
-                )}
+                }
 
                 {/* Hero - Cover + Profile Photo */}
-                {layout.cover_url ? (
-                  <>
+                {layout.cover_url ?
+                <>
                     {/* Cover banner */}
                     <div className="relative z-[1] w-full overflow-hidden" style={{ aspectRatio: "16 / 7" }}>
                       <img src={layout.cover_url} alt="" className="w-full h-full object-cover" />
                     </div>
                     {/* Profile photo overlapping */}
-                    <div className="relative z-[2] flex justify-center -mt-28">
-                      <div className="w-56 h-56 rounded-2xl overflow-hidden border-4 shadow-lg" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
-                        {p?.photo_url ? (
-                          <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center"><User className="h-8 w-8" style={{ color: T.text3 }} /></div>
-                        )}
+                    <div className="relative z-[2] flex justify-center -mt-10">
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 shadow-lg" style={{ borderColor: T.bg, background: "#2a2a2a" }}>
+                        {p?.photo_url ?
+                      <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} /> :
+
+                      <div className="w-full h-full flex items-center justify-center"><User className="h-8 w-8" style={{ color: T.text3 }} /></div>
+                      }
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="relative z-[1] w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
-                    {p?.photo_url ? (
-                      <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
-                    )}
+                  </> :
+
+                <div className="relative z-[1] w-full overflow-hidden" style={{ aspectRatio: "4 / 3.2", background: "#2a2a2a" }}>
+                    {p?.photo_url ?
+                  <img src={p.photo_url} alt="" className="w-full h-full object-cover" style={{ objectPosition: `${(p as any).photo_offset_x ?? 50}% ${(p as any).photo_offset_y ?? 30}%` }} /> :
+
+                  <div className="w-full h-full flex items-center justify-center"><User className="h-10 w-10" style={{ color: T.text3 }} /></div>
+                  }
                     <div className="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 0%, transparent 100%)` }} />
                     <div className="absolute bottom-0 left-0 right-0 h-[35%] pointer-events-none" style={{ background: `linear-gradient(to top, ${T.bg} 20%, transparent 100%)` }} />
                   </div>
-                )}
+                }
 
                 {/* Card body */}
                 <div className={`relative z-10 rounded-2xl pt-5 pb-3 px-[25px] mx-[16px] mb-[17px] py-0 my-[34px] ${layout.cover_url ? "mt-3" : "-mt-4"}`} style={{ background: T.card, position: "relative", zIndex: 1 }}>
@@ -459,16 +459,16 @@ export default function DashboardAppearance() {
                   }
 
                   {layout.show_company_header && company &&
-                   <div className="flex items-center justify-between gap-2 mt-3 pb-3" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
-                      {company.logo_url ? <img src={company.logo_url} alt="" className="opacity-85 shrink-0" style={{ height: '100px' }} /> : <span className="text-[9px] font-medium shrink-0" style={{ color: T.text2 }}>{company.name}</span>}
+                  <div className="flex items-center justify-between gap-2 mt-3 pb-3" style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
+                      {company.logo_url ? <img src={company.logo_url} alt="" className="h-20 opacity-85 shrink-0" /> : <span className="text-[9px] font-medium shrink-0" style={{ color: T.text2 }}>{company.name}</span>}
                       {company.tagline && <span className="text-[8px] italic text-right whitespace-pre-line" style={{ color: T.text2 }}>{company.tagline}</span>}
                     </div>
                   }
 
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     {layout.show_save_contact &&
-                    <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold" style={{ border: `1px solid ${T.cardBorder}`, background: T.card, color: T.buttonText }}>
-                        <Download className="w-3 h-3" />
+                    <div className="gap-1.5 py-2.5 rounded-lg text-[9px] font-semibold px-[4px] my-0 mx-[47px] flex items-center justify-center" style={{ border: `1px solid ${T.cardBorder}`, background: T.card, color: T.buttonText }}>
+                        <Download className="w-3 h-3" /> Salvar
                       </div>
                     }
                     {layout.show_lead_form &&
